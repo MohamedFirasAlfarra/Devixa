@@ -25,7 +25,6 @@ interface Quiz {
     reward_points: number;
 }
 
-import { updateStudentLevelAutomatically } from "@/utils/leveling";
 
 export default function Quiz() {
     const { courseId } = useParams();
@@ -149,40 +148,6 @@ export default function Quiz() {
 
             if (attemptError) throw attemptError;
 
-            if (passed && quiz.reward_points > 0) {
-                // Award points
-                const { data: profileData } = await supabase
-                    .from("profiles")
-                    .select("total_points")
-                    .eq("user_id", user.id)
-                    .single();
-
-                await supabase
-                    .from("profiles")
-                    .update({
-                        total_points: (profileData?.total_points || 0) + quiz.reward_points,
-                    })
-                    .eq("user_id", user.id);
-
-                await supabase.from("points_history").insert({
-                    user_id: user.id,
-                    points: quiz.reward_points,
-                    type: "attendance", // Or a new type "quiz_bonus"
-                    description: `Final quiz bonus for ${courseTitle}`,
-                    course_id: courseId,
-                });
-
-                // Trigger level update check
-                const levelUpdateResult = await updateStudentLevelAutomatically(user.id);
-                if (levelUpdateResult.updated) {
-                    toast({
-                        title: "🎉 Level Up!",
-                        description: `Congratulations! You've reached ${levelUpdateResult.newLevel} level!`,
-                    });
-                }
-
-                await refreshProfile();
-            }
 
             setResult({ score, passed });
             toast({
@@ -252,16 +217,6 @@ export default function Quiz() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-8 pb-10">
-                            <div className="bg-muted/50 rounded-2xl p-6 inline-block">
-                                <p className="text-sm font-medium text-muted-foreground mb-1">
-                                    {t.quiz.passingScore.replace("{score}", String(quiz.passing_score))}
-                                </p>
-                                {result.passed && (
-                                    <p className="text-primary font-bold text-lg">
-                                        {t.quiz.pointsEarned.replace("{points}", String(quiz.reward_points))}
-                                    </p>
-                                )}
-                            </div>
                             <div>
                                 <Button onClick={() => navigate("/my-courses")} size="lg" className="rounded-full px-12 h-14 font-bold text-lg">
                                     {t.quiz.backToCourses}

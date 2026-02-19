@@ -10,14 +10,11 @@ import {
     Search,
     User,
     Mail,
-    Star,
-    BookOpen,
     CheckCircle2,
     Clock,
     ChevronRight,
-    History,
     GraduationCap,
-    Trophy
+    BookOpen,
 } from "lucide-react";
 import {
     Dialog,
@@ -39,8 +36,6 @@ interface Profile {
     id: string;
     full_name: string | null;
     email: string | null;
-    total_points: number | null;
-    student_level: string | null;
     created_at: string;
 }
 
@@ -54,13 +49,6 @@ interface Enrollment {
     };
 }
 
-interface PointHistory {
-    id: string;
-    points: number;
-    type: string;
-    description: string | null;
-    created_at: string;
-}
 
 export default function AdminUsers() {
     const { t, dir } = useLanguage();
@@ -71,8 +59,7 @@ export default function AdminUsers() {
     const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
     const [userDetails, setUserDetails] = useState<{
         enrollments: Enrollment[];
-        pointsHistory: PointHistory[];
-    }>({ enrollments: [], pointsHistory: [] });
+    }>({ enrollments: [] });
     const [loadingDetails, setLoadingDetails] = useState(false);
 
     useEffect(() => {
@@ -112,18 +99,8 @@ export default function AdminUsers() {
 
             if (enrollmentsError) throw enrollmentsError;
 
-            // Fetch Points History
-            const { data: pointsData, error: pointsError } = await supabase
-                .from('points_history')
-                .select('*')
-                .eq('user_id', profileId)
-                .order('created_at', { ascending: false });
-
-            if (pointsError) throw pointsError;
-
             setUserDetails({
                 enrollments: (enrollmentsData as any) || [],
-                pointsHistory: pointsData || [],
             });
         } catch (error: any) {
             toast({
@@ -216,9 +193,6 @@ export default function AdminUsers() {
                                         <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center text-accent group-hover:bg-accent group-hover:text-accent-foreground transition-colors duration-300">
                                             <User className="w-6 h-6" />
                                         </div>
-                                        <Badge variant="secondary" className="gradient-primary text-white border-0">
-                                            {user.total_points || 0} {t.common.pts}
-                                        </Badge>
                                     </div>
                                     <CardTitle className="text-xl mt-3 line-clamp-1">{user.full_name || "N/A"}</CardTitle>
                                     <CardDescription className="flex items-center gap-1.5 truncate">
@@ -258,34 +232,7 @@ export default function AdminUsers() {
                         ) : (
                             <div className="space-y-6 py-4">
                                 {/* Stats Overview */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                    <div className="p-4 rounded-xl bg-orange-500/5 border border-orange-500/10 flex flex-col items-center justify-center text-center">
-                                        <Trophy className={`w-5 h-5 mb-1 ${selectedUser?.student_level === 'advanced' ? 'text-amber-500' :
-                                            selectedUser?.student_level === 'intermediate' ? 'text-blue-500' :
-                                                'text-slate-400'
-                                            }`} />
-                                        <div className="w-full">
-                                            <Select
-                                                value={selectedUser?.student_level || 'beginner'}
-                                                onValueChange={handleLevelChange}
-                                            >
-                                                <SelectTrigger className="h-8 border-none bg-transparent hover:bg-muted/50 transition-colors py-0 text-center justify-center font-bold">
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="beginner">{t.common.beginner}</SelectItem>
-                                                    <SelectItem value="intermediate">{t.common.intermediate}</SelectItem>
-                                                    <SelectItem value="advanced">{t.common.advanced}</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium">{t.common.level}</span>
-                                    </div>
-                                    <div className="p-4 rounded-xl bg-accent/5 border border-accent/10 flex flex-col items-center justify-center text-center">
-                                        <Star className="w-5 h-5 text-accent mb-1" />
-                                        <span className="text-lg font-bold">{selectedUser?.total_points || 0}</span>
-                                        <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium">{t.adminUsers.points}</span>
-                                    </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/10 flex flex-col items-center justify-center text-center">
                                         <BookOpen className="w-5 h-5 text-blue-500 mb-1" />
                                         <span className="text-lg font-bold">{activeEnrollments.length}</span>
@@ -338,32 +285,6 @@ export default function AdminUsers() {
                                     )}
                                 </div>
 
-                                {/* Points History */}
-                                <div className="space-y-3">
-                                    <h3 className="font-display font-semibold flex items-center gap-2">
-                                        <History className="w-4 h-4 text-accent" />
-                                        {t.adminUsers.pointsHistory}
-                                    </h3>
-                                    {userDetails.pointsHistory.length > 0 ? (
-                                        <div className="space-y-2">
-                                            {userDetails.pointsHistory.map((history) => (
-                                                <div key={history.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/20 border border-muted/50">
-                                                    <div className="flex flex-col">
-                                                        <span className="font-medium text-sm">{history.description || history.type}</span>
-                                                        <span className="text-xs text-muted-foreground">
-                                                            {new Date(history.created_at).toLocaleDateString()}
-                                                        </span>
-                                                    </div>
-                                                    <Badge className={history.points >= 0 ? "bg-green-500" : "bg-red-500"}>
-                                                        {history.points >= 0 ? '+' : ''}{history.points}
-                                                    </Badge>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <p className="text-sm text-muted-foreground italic">{t.adminUsers.noHistory}</p>
-                                    )}
-                                </div>
                             </div>
                         )}
                     </DialogContent>

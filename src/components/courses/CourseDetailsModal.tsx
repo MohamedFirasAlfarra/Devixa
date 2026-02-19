@@ -12,6 +12,8 @@ interface Course {
     total_hours: number;
     sessions_count: number;
     price: number;
+    price_syp: number;
+    image_url: string | null;
     points_reward: number;
     points_required: number;
 }
@@ -33,8 +35,16 @@ export default function CourseDetailsModal({ course, isOpen, onClose }: CourseDe
                 <div className="flex flex-col h-full max-h-[90vh]">
                     {/* Header/Hero Section */}
                     <div className="relative h-48 md:h-64 gradient-hero flex items-center justify-center shrink-0">
-                        <div className="absolute inset-0 bg-black/20" />
-                        <BookOpen className="w-20 h-20 text-white/40 relative z-10" />
+                        {course.image_url ? (
+                            <img
+                                src={course.image_url}
+                                alt={course.title}
+                                className="absolute inset-0 w-full h-full object-cover"
+                            />
+                        ) : (
+                            <BookOpen className="w-20 h-20 text-white/40 relative z-10" />
+                        )}
+                        <div className="absolute inset-0 bg-black/40" />
                         <div className="absolute bottom-4 left-6 right-6 z-10">
                             <Badge className="mb-2 bg-white/20 hover:bg-white/30 text-white border-white/40 backdrop-blur-md">
                                 {course.total_hours} {t.common.hours}
@@ -98,6 +108,9 @@ export default function CourseDetailsModal({ course, isOpen, onClose }: CourseDe
                                             </div>
                                             <div className="text-4xl font-extrabold text-foreground">
                                                 ${course.price.toFixed(0)}
+                                            </div>
+                                            <div className="text-xl font-bold text-muted-foreground mt-1">
+                                                {Number(course.price_syp || 0).toLocaleString()} ل.س
                                             </div>
                                         </div>
 

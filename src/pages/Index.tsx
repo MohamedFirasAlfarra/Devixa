@@ -1,24 +1,53 @@
-import * as React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import ThemeToggle from "@/components/ThemeToggle";
-import { GraduationCap, BookOpen, Star, Users, ArrowRight, ArrowLeft, Play, FileText, Sparkles, Award, ChevronRight } from "lucide-react";
+import { GraduationCap, BookOpen, Star, Users, ArrowRight, ArrowLeft, Play, FileText, Sparkles, Award, ChevronRight, Menu, X, Tag, Home, LogIn, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-import img1 from "../../public/images/course-web.png";
-import img2 from "../../public/images/course-mobile.png";
-import img3 from "../../public/images/course-UIUX.png";
+import img1 from "@/assets/images/course-web.png";
+import img2 from "@/assets/images/course-mobile.png";
+import img3 from "@/assets/images/course-UIUX.png";
+import img4 from "@/assets/images/course-ICDL.png";
+import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
+import OfferCard from "@/components/courses/OfferCard";
+import Logo from "@/components/common/Logo";
 
-import logo from "../../public/logos/logo1.png";
-import logo2 from "../../public/logos/logo2.png";
+type Offer = Tables<"offers">;
+type Course = Tables<"courses">;
 
 export default function Index() {
   const { user, isAdmin } = useAuth();
   const { t, dir, language } = useLanguage();
+  const [offers, setOffers] = useState<(Offer & { courses: Course })[]>([]);
+  const [loadingOffers, setLoadingOffers] = useState(true);
+
+  useEffect(() => {
+    async function fetchOffers() {
+      try {
+        const { data, error } = await supabase
+          .from("offers")
+          .select("*, courses(*)")
+          .eq("is_active", true)
+          .order("created_at", { ascending: false })
+          .limit(3);
+
+        if (error) throw error;
+        setOffers(data as (Offer & { courses: Course })[] || []);
+      } catch (error) {
+        console.error("Error fetching offers:", error);
+      } finally {
+        setLoadingOffers(false);
+      }
+    }
+
+    fetchOffers();
+  }, []);
   const ArrowIcon = dir === "rtl" ? ArrowLeft : ArrowRight;
   const slides = [
     {
@@ -46,7 +75,7 @@ export default function Index() {
       title: language === "ar" ? "كورس ICDL كامل" : "Full ICDL Course",
       subtitle: language === "ar" ? "إتقان المهارات الحاسوبية" : "Master Computer Skills",
       description: language === "ar" ? "احصل على المهارات الأساسية في الحاسوب والبرامج المكتبية بشهادة معترف بها دولياً." : "Gain essential computer and office software skills with an internationally recognized certificate.",
-      image: "/images/hero.png",
+      image: img4,
       gradient: "from-amber-600/20 to-orange-600/20"
     }
   ];
@@ -59,15 +88,15 @@ export default function Index() {
       gradient: "from-blue-500 to-cyan-500"
     },
     {
-      icon: Star,
-      title: t.landing.features.earnPoints,
-      description: t.landing.features.earnPointsDesc,
+      icon: Award,
+      title: t.landing.features.certifications,
+      description: t.landing.features.certificationsDesc,
       gradient: "from-amber-400 to-orange-500"
     },
     {
       icon: Users,
-      title: t.landing.features.joinBatches,
-      description: t.landing.features.joinBatchesDesc,
+      title: t.landing.features.expertMentors,
+      description: t.landing.features.expertMentorsDesc,
       gradient: "from-purple-500 to-pink-500"
     },
   ];
@@ -76,22 +105,33 @@ export default function Index() {
     {
       title: language === "ar" ? "تطوير الويب الشامل" : "Full Stack Web Development",
       category: language === "ar" ? "مسار الويب" : "Web Development",
-      image: "/images/course-web.png"
+      image: img1
     },
     {
       title: language === "ar" ? "تطوير تطبيقات الموبايل" : "Mobile App Development",
       category: language === "ar" ? "مسار الموبايل" : "Mobile Development",
-      image: "/images/course-mobile.png"
+      image: img2
     },
     {
       title: language === "ar" ? "الذكاء الاصطناعي" : "Artificial Intelligence",
       category: language === "ar" ? "مسار البيانات" : "Data Science",
-      image: "/images/course-ai.png"
+      image: img3 // Using UIUX image as fallback for AI for now
     }
   ];
 
   const [api, setApi] = React.useState<any>();
   const [current, setCurrent] = React.useState(0);
+  const [isScrolled, setIsScrolled] = React.useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   React.useEffect(() => {
     if (!api) return;
 
@@ -104,38 +144,186 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-background" dir={dir}>
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 glass-gooey transition-all duration-500 pt-2">
+      <nav className={cn(
+        "fixed top-0 left-0 right-0 mx-auto z-50 transition-all duration-500",
+        "w-full  bg-background/80 backdrop-blur-xl",
+        isScrolled
+          ? "py-1 bg-background/80 backdrop-blur-xl shadow-xl"
+          : "py-1 glass-gooey"
+      )}>
         <div className="container mx-auto px-6 flex items-center justify-between">
-          <div className="flex items-center gap-2 group cursor-pointer">
+          <div className="flex items-center">
             <Link to="/">
-              {/* Mobile Logo */}
-              <img src={logo2} alt="Devixa Logo" className="h-24 w-auto object-contain hover:scale-105 transition-transform block md:hidden" />
-              {/* Desktop Logo */}
-              <img src={logo} alt="Devixa Logo" className="h-32 w-44 object-contain hover:scale-105 transition-transform hidden md:block" />
+              <Logo imageClassName="h-28 md:h-24 lg:h-40" isNavbar />
             </Link>
           </div>
-          <div className="flex items-center gap-4">
-            <ThemeToggle />
-            <LanguageSwitcher />
-            {user ? (
-              <Link to={isAdmin ? "/admin" : "/dashboard"}>
-                <Button variant="default" className="rounded-full px-6 shadow-glow">
-                  {t.landing.goToDashboard}
-                </Button>
-              </Link>
-            ) : (
-              <Link to="/auth">
-                <Button variant="default" className="rounded-full px-6 shadow-glow">
-                  {t.common.signIn}
-                </Button>
-              </Link>
-            )}
+
+          {/* Desktop Links */}
+          <div className="hidden md:flex items-center gap-8">
+            <Link to="/" className="text-foreground/80 hover:text-primary font-medium transition-colors">
+              {language === "ar" ? "الرئيسية" : "Home"}
+            </Link>
+            <Link to="/courses" className="text-foreground/80 hover:text-primary font-medium transition-colors">
+              {language === "ar" ? "الدورات" : "Courses"}
+            </Link>
+            <Link to="/offers" className="text-foreground/80 hover:text-primary font-medium transition-colors">
+              {language === "ar" ? "العروض" : "Offers"}
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-2 md:gap-4">
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <LanguageSwitcher />
+            </div>
+
+            <div className="hidden xs:block">
+              {user ? (
+                <Link to={isAdmin ? "/admin" : "/dashboard"}>
+                  <Button variant="default" className="rounded-full px-4 md:px-6 shadow-glow gradient-primary border-none">
+                    {t.landing.goToDashboard}
+                  </Button>
+                </Link>
+              ) : (
+                <Link to="/auth">
+                  <Button variant="default" className="rounded-full px-4 md:px-6 shadow-glow gradient-primary border-none">
+                    {t.common.signIn}
+                  </Button>
+                </Link>
+              )}
+            </div>
+
+            {/* Mobile Toggle */}
+            <button
+              className="md:hidden p-2 text-foreground hover:bg-accent/10 rounded-xl transition-colors"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Menu Backdrop */}
+        <div
+          className={cn(
+            "fixed inset-0 bg-background/40 backdrop-blur-md z-[55] md:hidden transition-all duration-500",
+            mobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"
+          )}
+          onClick={() => setMobileMenuOpen(false)}
+        />
+
+        {/* Mobile Menu Side Drawer */}
+        <div className={cn(
+          "fixed inset-y-0 z-[60] w-[85%] max-w-xs bg-card/98 backdrop-blur-2xl border-none shadow-[0_0_50px_rgba(0,0,0,0.3)] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] md:hidden flex flex-col p-8 pt-12 overflow-hidden",
+          language === "ar" ? "right-0" : "left-0",
+          mobileMenuOpen
+            ? "translate-x-0"
+            : (language === "ar" ? "translate-x-full" : "-translate-x-full")
+        )}>
+          {/* Decorative Colored Background Elements */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
+          <div className="absolute -top-12 -right-12 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col h-full">
+            {/* Drawer Header */}
+            <div className="flex items-center justify-between mb-12">
+              <Logo imageClassName="h-14" isNavbar />
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-3 rounded-2xl bg-accent/5 hover:bg-accent/10 transition-colors active:scale-95"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <Link
+                to="/"
+                onClick={() => setMobileMenuOpen(false)}
+                className={cn(
+                  "group text-xl font-display font-black flex items-center gap-4 hover:text-primary transition-all p-4 rounded-2xl hover:bg-primary/5",
+                  mobileMenuOpen ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
+                  "delay-[100ms] duration-500"
+                )}
+              >
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors shadow-sm">
+                  <Home className="w-6 h-6" />
+                </div>
+                <span className="flex-1 text-start">{language === "ar" ? "الرئيسية" : "Home"}</span>
+                <ChevronRight className={cn("w-5 h-5 opacity-20 group-hover:opacity-100 transition-opacity", language === "ar" && "rotate-180")} />
+              </Link>
+
+              <Link
+                to="/courses"
+                onClick={() => setMobileMenuOpen(false)}
+                className={cn(
+                  "group text-xl font-display font-black flex items-center gap-4 hover:text-primary transition-all p-4 rounded-2xl hover:bg-accent/5",
+                  mobileMenuOpen ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
+                  "delay-[200ms] duration-500"
+                )}
+              >
+                <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center text-accent group-hover:bg-accent group-hover:text-accent-foreground transition-colors shadow-sm">
+                  <BookOpen className="w-6 h-6" />
+                </div>
+                <span className="flex-1 text-start">{language === "ar" ? "الدورات" : "Courses"}</span>
+                <ChevronRight className={cn("w-5 h-5 opacity-20 group-hover:opacity-100 transition-opacity", language === "ar" && "rotate-180")} />
+              </Link>
+
+              <Link
+                to="/offers"
+                onClick={() => setMobileMenuOpen(false)}
+                className={cn(
+                  "group text-xl font-display font-black flex items-center gap-4 hover:text-primary transition-all p-4 rounded-2xl hover:bg-destructive/5",
+                  mobileMenuOpen ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
+                  "delay-[300ms] duration-500"
+                )}
+              >
+                <div className="w-12 h-12 rounded-xl bg-destructive/10 flex items-center justify-center text-destructive group-hover:bg-destructive group-hover:text-destructive-foreground transition-colors shadow-sm">
+                  <Tag className="w-6 h-6" />
+                </div>
+                <span className="flex-1 text-start">{language === "ar" ? "العروض" : "Offers"}</span>
+                <ChevronRight className={cn("w-5 h-5 opacity-20 group-hover:opacity-100 transition-opacity", language === "ar" && "rotate-180")} />
+              </Link>
+
+              <div className={cn(
+                "mt-6 pt-8 border-t border-border/40 transition-all duration-700",
+                mobileMenuOpen ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0",
+                "delay-[400ms]"
+              )}>
+                {user ? (
+                  <Link to={isAdmin ? "/admin" : "/dashboard"} onClick={() => setMobileMenuOpen(false)}>
+                    <Button className="w-full rounded-2xl h-16 text-xl font-display font-black gradient-primary shadow-glow hover:scale-[1.02] active:scale-[0.98] transition-all gap-2">
+                      <LayoutDashboard className="w-6 h-6" />
+                      {t.landing.goToDashboard}
+                    </Button>
+                  </Link>
+                ) : (
+                  <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                    <Button className="w-full rounded-2xl h-16 text-xl font-display font-black gradient-primary shadow-glow hover:scale-[1.02] active:scale-[0.98] transition-all gap-2">
+                      <LogIn className="w-6 h-6" />
+                      {t.common.signIn}
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            </div>
+
+            <div className={cn(
+              "mt-auto pt-8 flex flex-col items-center gap-4 transition-all duration-700 delay-[500ms]",
+              mobileMenuOpen ? "opacity-100 scale-100" : "opacity-0 scale-90"
+            )}>
+              <div className="text-muted-foreground text-sm font-bold opacity-30 flex items-center gap-2">
+                <div className="w-8 h-px bg-current" />
+                <span>© {new Date().getFullYear()} {t.common.brandName}</span>
+                <div className="w-8 h-px bg-current" />
+              </div>
+            </div>
+          </div>
       </nav>
 
       {/* Hero Slider Section */}
-      <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-background">
+      <section className="relative min-h-[90vh] py-16 flex items-center overflow-hidden bg-background">
         <Carousel
           setApi={setApi}
           className="w-full h-full pt-20"
@@ -305,35 +493,76 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="container mx-auto px-6 py-20">
-        <div className="relative rounded-[3rem] overflow-hidden gradient-hero p-12 md:p-24 text-center text-white">
-          <div className="absolute inset-0 bg-black/10 backdrop-blur-sm" />
-          <div className="relative z-10 max-w-3xl mx-auto space-y-8 animate-scale-in">
-            <Award className="w-16 h-16 mx-auto opacity-80" />
-            <h2 className="text-4xl md:text-6xl font-display font-black leading-tight">
-              {t.landing.joinPlatform}
-            </h2>
-            <p className="text-xl text-white/80">
-              {t.landing.joinPlatformDesc}
-            </p>
-            <div className="pt-4">
-              <Link to="/auth?signup=true">
-                <Button size="lg" variant="secondary" className="rounded-full px-12 text-xl h-16 font-bold shadow-2xl hover:scale-105 transition-transform">
+      {/* Special Offers Section */}
+      <section className="py-24 relative overflow-hidden bg-background">
+        <div className="absolute inset-0 bg-accent/5 -z-10" />
+        <div className="container mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
+            <div className="space-y-4 animate-slide-up">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent font-bold text-sm uppercase tracking-widest border border-accent/20">
+                <Tag className="w-4 h-4" />
+                {language === "ar" ? "عروض حصرية" : "Exclusive Offers"}
+              </div>
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-display font-black leading-tight text-foreground">
+                {t.courses.offersTitle}
+              </h2>
+              <p className="text-xl text-muted-foreground max-w-2xl">
+                {t.courses.offersSubtitle}
+              </p>
+            </div>
+
+            {!user && (
+              <Link to="/auth?signup=true" className="animate-fade-in">
+                <Button className="rounded-xl px-8 h-14 text-lg font-bold gradient-primary shadow-glow hover:scale-105 transition-all">
                   {t.landing.registerNow}
                 </Button>
               </Link>
-            </div>
+            )}
           </div>
+
+          {loadingOffers ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-80 rounded-3xl bg-muted/20 animate-pulse border border-border/50" />
+              ))}
+            </div>
+          ) : offers.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {offers.map((offer, i) => (
+                <div key={offer.id} className="animate-slide-up" style={{ animationDelay: `${i * 100}ms` }}>
+                  <OfferCard offer={offer} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="relative rounded-[3rem] overflow-hidden gradient-hero p-12 md:p-24 text-center text-white">
+              <div className="absolute inset-0 bg-black/10 backdrop-blur-sm" />
+              <div className="relative z-10 max-w-3xl mx-auto space-y-8">
+                <Sparkles className="w-16 h-16 mx-auto opacity-80" />
+                <h2 className="text-3xl md:text-5xl font-display font-black leading-tight">
+                  {t.courses.noOffers}
+                </h2>
+                <p className="text-xl text-white/80">
+                  {t.courses.noOffersDesc}
+                </p>
+                <div className="pt-4">
+                  <Link to="/courses">
+                    <Button size="lg" variant="secondary" className="rounded-full px-12 text-xl h-16 font-bold shadow-2xl hover:scale-105 transition-transform">
+                      {language === "ar" ? "تصفح جميع الدورات" : "Browse All Courses"}
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
       {/* Footer */}
       <footer className="py-12 border-t border-border/40">
         <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2">
-            <GraduationCap className="w-6 h-6 text-primary" />
-            <span className="font-display font-bold text-xl">{t.common.brandName}</span>
+          <div className="flex items-center">
+            <Logo imageClassName="h-12" />
           </div>
           <div className="text-muted-foreground text-sm">
             © {new Date().getFullYear()} {t.common.brandName}. {t.auth.copyright}

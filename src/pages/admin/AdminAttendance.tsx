@@ -3,21 +3,20 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, Plus, CheckCircle2, XCircle, User, ChevronLeft, ChevronRight,Loader2} from "lucide-react";
-import { Dialog,DialogContent,DialogDescription,DialogHeader, DialogTitle, DialogFooter,} from "@/components/ui/dialog";
+import { Calendar, Users, Plus, CheckCircle2, XCircle, User, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
-import { updateStudentLevelAutomatically } from "@/utils/leveling";
 interface Batch {
     id: string;
     name: string;
     course_id: string;
-    courses: {  title: string;  };
+    courses: { title: string; };
 }
 interface CourseSession {
     id: string;
@@ -184,9 +183,6 @@ export default function AdminAttendance() {
                 .from('attendance')
                 .upsert(attendanceData, { onConflict: 'session_id, user_id' });
             if (error) throw error;
-            await Promise.all(
-                students.map(student => updateStudentLevelAutomatically(student.user_id))
-            );
 
             toast({ title: t.adminAttendance.saveSuccess });
             setIsMarkAttendanceOpen(false);

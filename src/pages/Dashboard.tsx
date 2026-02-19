@@ -7,7 +7,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { BookOpen, Star, Trophy, ArrowRight, ArrowLeft, Calendar, Users } from "lucide-react";
+import { BookOpen, ArrowRight, ArrowLeft, Calendar, Users } from "lucide-react";
 
 interface Enrollment {
   id: string;
@@ -28,19 +28,11 @@ interface Enrollment {
   } | null;
 }
 
-interface PointsHistory {
-  id: string;
-  points: number;
-  type: string;
-  description: string;
-  created_at: string;
-}
 
 export default function Dashboard() {
   const { user, profile, isAdmin } = useAuth();
   const { t, dir, language } = useLanguage();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
-  const [recentPoints, setRecentPoints] = useState<PointsHistory[]>([]);
   const [loading, setLoading] = useState(true);
 
   const ArrowIcon = dir === "rtl" ? ArrowLeft : ArrowRight;
@@ -68,17 +60,6 @@ export default function Dashboard() {
       if (enrollmentData) {
         setEnrollments(enrollmentData as unknown as Enrollment[]);
       }
-
-      const { data: pointsData } = await supabase
-        .from("points_history")
-        .select("*")
-        .eq("user_id", user!.id)
-        .order("created_at", { ascending: false })
-        .limit(5);
-
-      if (pointsData) {
-        setRecentPoints(pointsData);
-      }
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     } finally {
@@ -95,14 +76,7 @@ export default function Dashboard() {
       bg: "bg-primary/10",
     },
     {
-      icon: Star,
-      label: t.dashboard.totalPoints,
-      value: profile?.total_points || 0,
-      color: "text-accent",
-      bg: "bg-accent/10",
-    },
-    {
-      icon: Trophy,
+      icon: BookOpen, // Changed from Trophy to BookOpen as placeholder or just keep two
       label: t.dashboard.completed,
       value: enrollments.filter((e) => e.progress_percentage === 100).length,
       color: "text-success",
@@ -144,32 +118,10 @@ export default function Dashboard() {
             </p>
           </div>
 
-          {/* Level Badge - Hidden for Admin */}
-          {!isAdmin && profile?.student_level && (
-            <div className="flex items-center gap-3 bg-card/40 backdrop-blur-md border border-border/50 p-4 rounded-2xl shadow-glow">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${profile?.student_level === 'advanced' ? 'bg-amber-500/20 text-amber-500' :
-                profile?.student_level === 'intermediate' ? 'bg-blue-500/20 text-blue-500' :
-                  'bg-slate-500/20 text-slate-500'
-                }`}>
-                <Trophy className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{t.common.level}</p>
-                <p className={`font-bold text-lg ${profile?.student_level === 'advanced' ? 'text-amber-500' :
-                  profile?.student_level === 'intermediate' ? 'text-blue-500' :
-                    'text-slate-500'
-                  }`}>
-                  {profile?.student_level === 'advanced' ? t.common.advanced :
-                    profile?.student_level === 'intermediate' ? t.common.intermediate :
-                      t.common.beginner}
-                </p>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Stats cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-slide-up">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-slide-up">
           {stats.map((stat, index) => (
             <Card key={index} className="border-0 shadow-md">
               <CardContent className="p-6">
@@ -188,9 +140,9 @@ export default function Dashboard() {
         </div>
 
         {/* Main content grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6">
           {/* Enrolled courses */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-display font-bold">{t.dashboard.myCourses}</h2>
               <Link to="/courses">
@@ -256,53 +208,6 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Points history */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-display font-bold">{t.dashboard.recentPoints}</h2>
-              <Link to="/points">
-                <Button variant="ghost" size="sm">
-                  {t.common.viewAll} <ArrowIcon className="w-4 h-4 ms-2" />
-                </Button>
-              </Link>
-            </div>
-
-            <Card className="border-0 shadow-md">
-              <CardContent className="p-4">
-                {recentPoints.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Star className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-                    <p className="text-muted-foreground text-sm">
-                      {t.dashboard.noPointsYet}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {recentPoints.map((point) => (
-                      <div
-                        key={point.id}
-                        className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
-                      >
-                        <div>
-                          <p className="font-medium text-sm">{point.description}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(point.created_at).toLocaleDateString(language === "ar" ? "ar-SA" : "en-US")}
-                          </p>
-                        </div>
-                        <span
-                          className={`font-bold ${point.points > 0 ? "text-success" : "text-destructive"
-                            }`}
-                        >
-                          {point.points > 0 ? "+" : ""}
-                          {point.points}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
         </div>
       </div>
     </DashboardLayout>

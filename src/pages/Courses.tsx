@@ -7,7 +7,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { BookOpen, Clock, Users, Star, Tag, Check, Info } from "lucide-react";
+import { BookOpen, Clock, Users, Star, Tag, Check, Info, Wallet, CreditCard, Send } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import CourseDetailsModal from "@/components/courses/CourseDetailsModal";
 
 interface Course {
@@ -17,6 +27,8 @@ interface Course {
   total_hours: number;
   sessions_count: number;
   price: number;
+  price_syp: number;
+  image_url: string | null;
   points_reward: number;
   points_required: number;
 }
@@ -43,6 +55,8 @@ export default function Courses() {
   const [enrolling, setEnrolling] = useState<string | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -99,7 +113,12 @@ export default function Courses() {
     return enrollments.some((e) => e.course_id === courseId);
   };
 
-  const handleEnroll = async (course: Course, usePoints: boolean) => {
+  const handleEnrollClick = (course: Course) => {
+    setSelectedCourse(course);
+    setPaymentModalOpen(true);
+  };
+
+  const handleEnroll = async (course: Course, usePoints: boolean, paymentMethod?: string) => {
     if (!user) return;
 
     setEnrolling(course.id);
@@ -163,7 +182,7 @@ export default function Courses() {
           user_id: user.id,
           course_id: course.id,
           batch_id: batchId,
-          payment_method: "cash",
+          payment_method: paymentMethod || "cash",
         });
 
         if (enrollError) throw enrollError;
@@ -190,8 +209,8 @@ export default function Courses() {
         toast({
           title: t.courses.enrollSuccess,
           description: `${t.courses.enrollSuccessDesc.replace("{course}", course.title)} ${course.points_reward > 0
-              ? t.courses.pointsEarned.replace("{points}", String(course.points_reward))
-              : ""
+            ? t.courses.pointsEarned.replace("{points}", String(course.points_reward))
+            : ""
             }`,
         });
       }
@@ -266,13 +285,21 @@ export default function Courses() {
                 >
                   {/* Course image placeholder */}
                   <div
-                    className="h-40 gradient-hero flex items-center justify-center cursor-pointer"
+                    className="h-40 gradient-hero flex items-center justify-center cursor-pointer overflow-hidden p-0"
                     onClick={() => {
                       setSelectedCourse(course);
                       setIsModalOpen(true);
                     }}
                   >
-                    <BookOpen className="w-16 h-16 text-primary-foreground/50 group-hover:scale-110 transition-transform" />
+                    {course.image_url ? (
+                      <img
+                        src={course.image_url}
+                        alt={course.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                    ) : (
+                      <BookOpen className="w-16 h-16 text-primary-foreground/50 group-hover:scale-110 transition-transform" />
+                    )}
                   </div>
 
                   <CardHeader className="pb-2">
@@ -311,19 +338,24 @@ export default function Courses() {
                     </div>
 
                     {/* Pricing */}
-                    <div className="flex items-baseline gap-2">
-                      {offer ? (
-                        <>
-                          <span className="text-2xl font-bold">
-                            ${discountedPrice.toFixed(0)}
-                          </span>
-                          <span className="text-lg text-muted-foreground line-through">
-                            ${course.price}
-                          </span>
-                        </>
-                      ) : (
-                        <span className="text-2xl font-bold">${course.price}</span>
-                      )}
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-baseline gap-2">
+                        {offer ? (
+                          <>
+                            <span className="text-2xl font-bold">
+                              ${discountedPrice.toFixed(0)}
+                            </span>
+                            <span className="text-lg text-muted-foreground line-through">
+                              ${course.price}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-2xl font-bold">${course.price}</span>
+                        )}
+                      </div>
+                      <div className="text-sm font-medium text-muted-foreground">
+                        {Number(course.price_syp || 0).toLocaleString()} ل.س
+                      </div>
                     </div>
 
                     {offer && offer.max_students && (
@@ -356,7 +388,7 @@ export default function Courses() {
                         <>
                           <Button
                             className="w-full gradient-primary hover:opacity-90"
-                            onClick={() => handleEnroll(course, false)}
+                            onClick={() => handleEnrollClick(course)}
                             disabled={enrolling === course.id}
                           >
                             {enrolling === course.id
@@ -390,6 +422,89 @@ export default function Courses() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       />
+
+      {/* Payment Selection Modal */}
+      <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t.courses.selectPaymentMethod}</DialogTitle>
+            <DialogDescription>
+              {selectedCourse?.title}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <RadioGroup
+              defaultValue="shamiCash"
+              onValueChange={setSelectedPaymentMethod}
+              className="grid gap-3"
+            >
+              <div className="flex items-center space-x-3 space-x-reverse border p-4 rounded-xl hover:bg-muted/50 transition-colors cursor-pointer group">
+                <RadioGroupItem value="shamiCash" id="shamiCash" />
+                <Label
+                  htmlFor="shamiCash"
+                  className="flex flex-1 items-center gap-3 cursor-pointer justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                      <Wallet className="w-5 h-5" />
+                    </div>
+                    <span className="font-medium">{t.courses.paymentMethods.shamiCash}</span>
+                  </div>
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-3 space-x-reverse border p-4 rounded-xl hover:bg-muted/50 transition-colors cursor-pointer group">
+                <RadioGroupItem value="syriatelCash" id="syriatelCash" />
+                <Label
+                  htmlFor="syriatelCash"
+                  className="flex flex-1 items-center gap-3 cursor-pointer justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                      <CreditCard className="w-5 h-5" />
+                    </div>
+                    <span className="font-medium">{t.courses.paymentMethods.syriatelCash}</span>
+                  </div>
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-3 space-x-reverse border p-4 rounded-xl hover:bg-muted/50 transition-colors cursor-pointer group">
+                <RadioGroupItem value="alHaram" id="alHaram" />
+                <Label
+                  htmlFor="alHaram"
+                  className="flex flex-1 items-center gap-3 cursor-pointer justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                      <Send className="w-5 h-5" />
+                    </div>
+                    <span className="font-medium">{t.courses.paymentMethods.alHaram}</span>
+                  </div>
+                </Label>
+              </div>
+            </RadioGroup>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setPaymentModalOpen(false)}
+            >
+              {t.common.cancel}
+            </Button>
+            <Button
+              onClick={() => {
+                if (selectedCourse) {
+                  handleEnroll(selectedCourse, false, selectedPaymentMethod || "shamiCash");
+                  setPaymentModalOpen(false);
+                }
+              }}
+              className="gradient-primary"
+            >
+              {t.courses.enroll}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

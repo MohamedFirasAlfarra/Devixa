@@ -285,10 +285,12 @@ export type Database = {
           created_at: string | null
           description: string | null
           id: string
+          image_url: string | null
           is_active: boolean | null
           points_required: number | null
           points_reward: number | null
           price: number | null
+          price_syp: number | null
           sessions_count: number | null
           title: string
           total_hours: number | null
@@ -298,10 +300,12 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
           points_required?: number | null
           points_reward?: number | null
           price?: number | null
+          price_syp?: number | null
           sessions_count?: number | null
           title: string
           total_hours?: number | null
@@ -311,10 +315,12 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
           points_required?: number | null
           points_reward?: number | null
           price?: number | null
+          price_syp?: number | null
           sessions_count?: number | null
           title?: string
           total_hours?: number | null

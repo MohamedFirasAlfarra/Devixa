@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, BookOpen, Star, TrendingUp } from "lucide-react";
+import { Users, BookOpen, TrendingUp } from "lucide-react";
 
 export default function AdminDashboard() {
   const { t } = useLanguage();
@@ -11,7 +11,6 @@ export default function AdminDashboard() {
     totalUsers: 0,
     totalCourses: 0,
     totalEnrollments: 0,
-    totalPointsAwarded: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -21,18 +20,16 @@ export default function AdminDashboard() {
 
   const fetchStats = async () => {
     try {
-      const [profiles, courses, enrollments, points] = await Promise.all([
+      const [profiles, courses, enrollments] = await Promise.all([
         supabase.from("profiles").select("id", { count: "exact" }),
         supabase.from("courses").select("id", { count: "exact" }),
         supabase.from("enrollments").select("id", { count: "exact" }),
-        supabase.from("points_history").select("points").gt("points", 0),
       ]);
 
       setStats({
         totalUsers: profiles.count || 0,
         totalCourses: courses.count || 0,
         totalEnrollments: enrollments.count || 0,
-        totalPointsAwarded: points.data?.reduce((sum, p) => sum + p.points, 0) || 0,
       });
     } catch (error) {
       console.error("Error fetching stats:", error);
@@ -45,7 +42,6 @@ export default function AdminDashboard() {
     { icon: Users, label: t.admin.totalStudents, value: stats.totalUsers, color: "text-primary", bg: "bg-primary/10" },
     { icon: BookOpen, label: t.admin.coursesCount, value: stats.totalCourses, color: "text-success", bg: "bg-success/10" },
     { icon: TrendingUp, label: t.admin.enrollments, value: stats.totalEnrollments, color: "text-accent", bg: "bg-accent/10" },
-    { icon: Star, label: t.admin.pointsAwarded, value: stats.totalPointsAwarded, color: "text-warning", bg: "bg-warning/10" },
   ];
 
   return (
@@ -56,7 +52,7 @@ export default function AdminDashboard() {
           <p className="text-muted-foreground">{t.admin.managePlatform}</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {statCards.map((stat, index) => (
             <Card key={index} className="border-0 shadow-md">
               <CardContent className="p-6">

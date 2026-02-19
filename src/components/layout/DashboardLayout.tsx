@@ -21,8 +21,10 @@ import {
   Gift,
   Library,
   UserCircle,
+  Tag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Logo from "../common/Logo";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -43,9 +45,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const studentNavItems = [
     { icon: Home, label: t.nav.dashboard, path: "/dashboard" },
     { icon: BookOpen, label: t.nav.courses, path: "/courses" },
+    { icon: Tag, label: t.nav.offers, path: "/offers" },
     { icon: Library, label: t.nav.myCourses, path: "/my-courses" },
-    { icon: Gift, label: t.nav.offers, path: "/offers" },
-    { icon: Star, label: t.nav.myPoints, path: "/points" },
     { icon: UserCircle, label: t.nav.profile, path: "/profile" },
   ];
 
@@ -55,7 +56,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { icon: BookOpen, label: t.nav.courses, path: "/admin/courses" },
     { icon: GraduationCap, label: t.nav.batches, path: "/admin/batches" },
     { icon: Calendar, label: t.nav.attendance, path: "/admin/attendance" },
-    { icon: Gift, label: t.nav.offers, path: "/admin/offers" },
+    { icon: Tag, label: t.nav.offers, path: "/admin/offers" },
     { icon: Bell, label: t.nav.notifications, path: "/admin/notifications" },
     { icon: BarChart3, label: t.nav.statistics, path: "/admin/stats" },
   ];
@@ -87,14 +88,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         )}
       >
         <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="p-6 border-b border-border">
+          <div className="p-4 border-b border-border">
             <div className="flex items-center justify-between">
-              <Link to={isAdmin ? "/admin" : "/dashboard"} className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
-                  <GraduationCap className="w-6 h-6 text-primary-foreground" />
-                </div>
-                <span className="text-xl font-display font-bold">{t.common.brandName}</span>
+              <Link to={isAdmin ? "/admin" : "/dashboard"} className="flex items-center">
+                <Logo imageClassName="h-20" />
               </Link>
               <button
                 onClick={() => setSidebarOpen(false)}
@@ -129,17 +126,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="p-4 border-t border-border">
             <div className="flex items-center gap-3 px-4 py-3 bg-muted rounded-lg mb-3">
               <div className="w-10 h-10 rounded-full overflow-hidden gradient-accent flex items-center justify-center shrink-0">
-                {profile?.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt={profile.full_name || "User"}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="text-accent-foreground font-bold text-sm">
-                    {profile?.full_name?.charAt(0)?.toUpperCase() || "U"}
-                  </span>
-                )}
+                <span className="text-accent-foreground font-bold text-sm">
+                  {profile?.full_name?.charAt(0)?.toUpperCase() || "U"}
+                </span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm truncate">
@@ -150,16 +139,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 </p>
               </div>
             </div>
-            {!isAdmin && (
-              <div className="px-4 py-2 mb-3 bg-accent/10 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Star className="w-4 h-4 text-accent" />
-                  <span className="text-sm font-medium">
-                    {profile?.total_points || 0} {t.common.points}
-                  </span>
-                </div>
-              </div>
-            )}
             <Button
               variant="ghost"
               className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10"

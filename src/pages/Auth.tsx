@@ -9,8 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useToast } from "@/hooks/use-toast";
-import { BookOpen, Sparkles, Trophy, Users } from "lucide-react";
+import { BookOpen, Award, Users, GraduationCap } from "lucide-react";
 import { z } from "zod";
+import Logo from "@/components/common/Logo";
 
 export default function Auth() {
   const { t, dir } = useLanguage();
@@ -115,8 +116,8 @@ export default function Auth() {
 
   const features = [
     { icon: BookOpen, text: t.auth.features.accessCourses },
-    { icon: Trophy, text: t.auth.features.earnPoints },
-    { icon: Sparkles, text: t.auth.features.redeemRewards },
+    { icon: Award, text: t.auth.features.certifications },
+    { icon: GraduationCap, text: t.auth.features.expertMentors },
     { icon: Users, text: t.auth.features.joinBatches },
   ];
 
@@ -124,10 +125,8 @@ export default function Auth() {
     <div className="min-h-screen flex" dir={dir}>
       {/* Left side - Branding */}
       <div className="hidden lg:flex lg:w-1/2 gradient-hero p-12 flex-col justify-between">
-        <div>
-          <h1 className="text-4xl font-display font-bold text-primary-foreground mb-2">
-            Devixa
-          </h1>
+        <div className="space-y-4">
+          <Logo imageClassName="h-32 w-auto" />
           <p className="text-primary-foreground/80 text-lg">
             {t.auth.brandTagline}
           </p>
@@ -161,8 +160,8 @@ export default function Auth() {
           </div>
           <Card className="border-0 shadow-lg">
             <CardHeader className="text-center pb-2">
-              <div className="lg:hidden mb-4">
-                <h1 className="text-2xl font-display font-bold text-primary">Devixa</h1>
+              <div className="lg:hidden mb-4 flex justify-center">
+                <Logo imageClassName="h-16" />
               </div>
               <CardTitle className="text-2xl font-display">
                 {isLogin ? t.auth.welcomeBack : t.auth.createAccount}

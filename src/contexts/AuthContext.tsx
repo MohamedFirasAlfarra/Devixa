@@ -10,8 +10,6 @@ interface AuthContextType {
   profile: {
     full_name: string | null;
     email: string | null;
-    total_points: number;
-    student_level: string | null;
   } | null;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -30,7 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Fetch profile
     const { data: profileData } = await supabase
       .from("profiles")
-      .select("full_name, email, total_points, student_level")
+      .select("full_name, email")
       .eq("user_id", userId)
       .maybeSingle();
 

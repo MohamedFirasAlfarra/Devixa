@@ -53,6 +53,7 @@ interface OfferFormData {
     discount_percentage: number;
     max_students: number | null;
     is_active: boolean;
+    expires_at: string | null;
 }
 
 const defaultFormData: OfferFormData = {
@@ -60,6 +61,7 @@ const defaultFormData: OfferFormData = {
     discount_percentage: 0,
     max_students: null,
     is_active: true,
+    expires_at: null,
 };
 
 export default function AdminOffers() {
@@ -115,6 +117,7 @@ export default function AdminOffers() {
                 discount_percentage: offer.discount_percentage,
                 max_students: offer.max_students,
                 is_active: offer.is_active ?? true,
+                expires_at: offer.expires_at,
             });
         } else {
             setEditingOffer(null);
@@ -163,6 +166,7 @@ export default function AdminOffers() {
                         discount_percentage: formData.discount_percentage,
                         max_students: formData.max_students,
                         is_active: formData.is_active,
+                        expires_at: formData.expires_at,
                     })
                     .eq("id", editingOffer.id);
 
@@ -178,6 +182,7 @@ export default function AdminOffers() {
                     discount_percentage: formData.discount_percentage,
                     max_students: formData.max_students,
                     is_active: formData.is_active,
+                    expires_at: formData.expires_at,
                 });
 
                 if (error) throw error;
@@ -280,6 +285,7 @@ export default function AdminOffers() {
                                         <TableHead>{t.adminOffers.originalPrice}</TableHead>
                                         <TableHead>{t.adminOffers.offerPrice}</TableHead>
                                         <TableHead>{t.adminOffers.usage}</TableHead>
+                                        <TableHead>{t.adminOffers.expiryDate}</TableHead>
                                         <TableHead>{t.common.status}</TableHead>
                                         <TableHead className="text-end">{t.common.actions}</TableHead>
                                     </TableRow>
@@ -300,6 +306,11 @@ export default function AdminOffers() {
                                                 <TableCell className="font-bold text-primary">${discountedPrice.toFixed(2)}</TableCell>
                                                 <TableCell>
                                                     {offer.used_count || 0} / {offer.max_students || "\u221E"}
+                                                </TableCell>
+                                                <TableCell className="text-sm">
+                                                    {offer.expires_at
+                                                        ? new Date(offer.expires_at).toLocaleString()
+                                                        : t.adminOffers.unlimited}
                                                 </TableCell>
                                                 <TableCell>
                                                     <span
@@ -430,6 +441,19 @@ export default function AdminOffers() {
                                     onCheckedChange={(checked) => handleInputChange("is_active", checked)}
                                 />
                                 <Label htmlFor="offer_active">{t.adminOffers.isActive}</Label>
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="expires_at">{t.adminOffers.expiryDate}</Label>
+                                <Input
+                                    id="expires_at"
+                                    type="datetime-local"
+                                    value={formData.expires_at ? formData.expires_at.slice(0, 16) : ""}
+                                    onChange={(e) => handleInputChange("expires_at", e.target.value || null)}
+                                />
+                                <p className="text-[10px] text-muted-foreground">
+                                    {t.adminOffers.dialogDesc}
+                                </p>
                             </div>
                         </div>
                         <DialogFooter>

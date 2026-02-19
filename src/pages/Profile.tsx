@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { User, Mail, Calendar, Star, Save, Lock, Trophy } from "lucide-react";
+import { User, Mail, Calendar, Save, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function Profile() {
@@ -113,17 +113,7 @@ export default function Profile() {
                         <CardTitle>{t.profile.accountStats}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Star className="w-4 h-4 text-primary" />
-                                    <span className="text-sm font-medium text-muted-foreground">
-                                        {t.common.points}
-                                    </span>
-                                </div>
-                                <div className="text-2xl font-bold">{profile?.total_points || 0}</div>
-                            </div>
-
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="p-4 rounded-lg bg-accent/5 border border-accent/10">
                                 <div className="flex items-center gap-2 mb-1">
                                     <Calendar className="w-4 h-4 text-accent" />
@@ -138,27 +128,13 @@ export default function Profile() {
 
                             <div className="p-4 rounded-lg bg-secondary/50 border border-secondary">
                                 <div className="flex items-center gap-2 mb-1">
-                                    {isAdmin ? (
-                                        <User className="w-4 h-4 text-secondary-foreground" />
-                                    ) : (
-                                        <Trophy className={`w-4 h-4 ${profile?.student_level === 'advanced' ? 'text-amber-500' :
-                                            profile?.student_level === 'intermediate' ? 'text-blue-500' :
-                                                'text-slate-400'
-                                            }`} />
-                                    )}
+                                    <User className="w-4 h-4 text-secondary-foreground" />
                                     <span className="text-sm font-medium text-muted-foreground">
-                                        {isAdmin ? (t.profile?.accountType || "Account Type") : t.common.level}
+                                        {t.profile?.accountType || "Account Type"}
                                     </span>
                                 </div>
-                                <div className={`text-2xl font-bold capitalize ${!isAdmin && profile?.student_level === 'advanced' ? 'text-amber-600' :
-                                    !isAdmin && profile?.student_level === 'intermediate' ? 'text-blue-600' :
-                                        ''
-                                    }`}>
-                                    {isAdmin ? (t.profile?.admin || "Admin") : (
-                                        profile?.student_level === 'advanced' ? t.common.advanced :
-                                            profile?.student_level === 'intermediate' ? t.common.intermediate :
-                                                t.common.beginner
-                                    )}
+                                <div className="text-2xl font-bold capitalize">
+                                    {isAdmin ? (t.profile?.admin || "Admin") : (t.profile?.student || "Student")}
                                 </div>
                             </div>
                         </div>

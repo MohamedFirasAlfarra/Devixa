@@ -34,7 +34,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, BookOpen, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, BookOpen, Loader2, Upload, X, Clock, Calendar, DollarSign, Layers, CheckCircle2, MoreVertical } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -46,8 +53,8 @@ interface CourseFormData {
   total_hours: number;
   sessions_count: number;
   price: number;
-  points_reward: number;
-  points_required: number;
+  price_syp: number;
+  image_url: string;
   is_active: boolean;
 }
 
@@ -57,8 +64,8 @@ const defaultFormData: CourseFormData = {
   total_hours: 0,
   sessions_count: 0,
   price: 0,
-  points_reward: 0,
-  points_required: 0,
+  price_syp: 0,
+  image_url: "",
   is_active: true,
 };
 
@@ -72,6 +79,8 @@ export default function AdminCourses() {
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
   const [formData, setFormData] = useState<CourseFormData>(defaultFormData);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -108,8 +117,8 @@ export default function AdminCourses() {
         total_hours: course.total_hours || 0,
         sessions_count: course.sessions_count || 0,
         price: Number(course.price) || 0,
-        points_reward: course.points_reward || 0,
-        points_required: course.points_required || 0,
+        price_syp: Number(course.price_syp) || 0,
+        image_url: course.image_url || "",
         is_active: course.is_active ?? true,
       });
     } else {
@@ -123,11 +132,45 @@ export default function AdminCourses() {
     setDialogOpen(false);
     setEditingCourse(null);
     setFormData(defaultFormData);
+    setSelectedFile(null);
+    setImagePreview(null);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadImage = async (file: File) => {
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    const { error: uploadError, data } = await supabase.storage
+      .from("courses")
+      .upload(filePath, file);
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from("courses")
+      .getPublicUrl(filePath);
+
+    return publicUrl;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.title.trim()) {
       toast({
         title: t.adminCourses.validationError,
@@ -139,6 +182,12 @@ export default function AdminCourses() {
 
     setSaving(true);
     try {
+      let finalImageUrl = formData.image_url;
+
+      if (selectedFile) {
+        finalImageUrl = await uploadImage(selectedFile);
+      }
+
       if (editingCourse) {
         const { error } = await supabase
           .from("courses")
@@ -148,8 +197,8 @@ export default function AdminCourses() {
             total_hours: formData.total_hours,
             sessions_count: formData.sessions_count,
             price: formData.price,
-            points_reward: formData.points_reward,
-            points_required: formData.points_required,
+            price_syp: formData.price_syp,
+            image_url: finalImageUrl,
             is_active: formData.is_active,
           })
           .eq("id", editingCourse.id);
@@ -167,8 +216,8 @@ export default function AdminCourses() {
           total_hours: formData.total_hours,
           sessions_count: formData.sessions_count,
           price: formData.price,
-          points_reward: formData.points_reward,
-          points_required: formData.points_required,
+          price_syp: formData.price_syp,
+          image_url: finalImageUrl,
           is_active: formData.is_active,
         });
 
@@ -235,103 +284,157 @@ export default function AdminCourses() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-display font-bold mb-2">{t.adminCourses.title}</h1>
-            <p className="text-muted-foreground">{t.adminCourses.subtitle}</p>
+      <div className="space-y-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 rounded-3xl bg-card border border-accent/10 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
+              <BookOpen className="w-8 h-8" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-display font-black tracking-tight">{t.adminCourses.title}</h1>
+              <p className="text-muted-foreground font-medium">{t.adminCourses.subtitle}</p>
+            </div>
           </div>
-          <Button onClick={() => handleOpenDialog()} className="gap-2">
-            <Plus className="w-4 h-4" />
+          <Button onClick={() => handleOpenDialog()} size="lg" className="h-14 px-8 rounded-2xl gap-2 font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 active:scale-95 transition-all">
+            <Plus className="w-5 h-5" />
             {t.adminCourses.addCourse}
           </Button>
         </div>
 
-        <Card className="border-0 shadow-md">
-          <CardContent className="p-0">
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : courses.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <BookOpen className="w-12 h-12 text-muted-foreground mb-4" />
-                <p className="text-lg font-medium mb-2">{t.adminCourses.noCourses}</p>
-                <p className="text-muted-foreground mb-4">{t.adminCourses.noCoursesDesc}</p>
-                <Button onClick={() => handleOpenDialog()} className="gap-2">
-                  <Plus className="w-4 h-4" />
-                  {t.adminCourses.addCourse}
-                </Button>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t.adminCourses.courseTitle}</TableHead>
-                    <TableHead>{t.common.hours}</TableHead>
-                    <TableHead>{t.common.sessions}</TableHead>
-                    <TableHead>{t.adminCourses.price}</TableHead>
-                    <TableHead>{t.adminCourses.pointsReward}</TableHead>
-                    <TableHead>{t.adminCourses.pointsRequired}</TableHead>
-                    <TableHead>{t.common.status}</TableHead>
-                    <TableHead className="text-end">{t.common.actions}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {courses.map((course) => (
-                    <TableRow key={course.id}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{course.title}</p>
-                          {course.description && (
-                            <p className="text-sm text-muted-foreground line-clamp-1">
-                              {course.description}
-                            </p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>{course.total_hours || 0}h</TableCell>
-                      <TableCell>{course.sessions_count || 0}</TableCell>
-                      <TableCell>${Number(course.price || 0).toFixed(2)}</TableCell>
-                      <TableCell>{course.points_reward || 0}</TableCell>
-                      <TableCell>{course.points_required || 0}</TableCell>
-                      <TableCell>
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            course.is_active
-                              ? "bg-success/10 text-success"
-                              : "bg-muted text-muted-foreground"
-                          }`}
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-32 gap-4">
+            <Loader2 className="w-12 h-12 animate-spin text-primary" />
+            <p className="text-muted-foreground animate-pulse font-medium">{t.common.loading}</p>
+          </div>
+        ) : courses.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-card rounded-3xl border-2 border-dashed border-accent/20 border-spacing-4">
+            <div className="w-20 h-20 rounded-full bg-accent/5 flex items-center justify-center mb-6">
+              <BookOpen className="w-10 h-10 text-accent/40" />
+            </div>
+            <p className="text-2xl font-display font-black mb-2">{t.adminCourses.noCourses}</p>
+            <p className="text-muted-foreground max-w-md mb-8">{t.adminCourses.noCoursesDesc}</p>
+            <Button onClick={() => handleOpenDialog()} variant="outline" size="lg" className="h-14 px-10 rounded-2xl border-2 hover:bg-accent/5 font-bold">
+              <Plus className="w-5 h-5 me-2" />
+              {t.adminCourses.addCourse}
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {courses.map((course) => (
+              <Card
+                key={course.id}
+                className="group overflow-hidden border-accent/10 hover:border-accent/30 transition-all duration-300 hover:shadow-xl bg-card"
+              >
+                {/* Card Image Wrapper */}
+                <div className="relative h-48 overflow-hidden">
+                  {course.image_url ? (
+                    <img
+                      src={course.image_url}
+                      alt={course.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-accent/5 flex items-center justify-center">
+                      <BookOpen className="w-12 h-12 text-accent/20" />
+                    </div>
+                  )}
+
+                  {/* Status Badge */}
+                  <div className="absolute top-3 right-3">
+                    <Badge
+                      className={`${course.is_active
+                        ? "bg-green-500/90 text-white"
+                        : "bg-gray-500/90 text-white"
+                        } backdrop-blur-sm border-0`}
+                    >
+                      {course.is_active ? t.common.active : t.common.inactive}
+                    </Badge>
+                  </div>
+
+                  {/* Quick Actions Dropdown */}
+                  <div className="absolute top-3 left-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="secondary" size="icon" className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white">
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start">
+                        <DropdownMenuItem onClick={() => handleOpenDialog(course)} className="gap-2 cursor-pointer">
+                          <Pencil className="w-4 h-4" />
+                          {t.common.edit}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleDeleteClick(course)}
+                          className="gap-2 cursor-pointer text-destructive focus:text-destructive"
                         >
-                          {course.is_active ? t.common.active : t.common.inactive}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-end">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleOpenDialog(course)}
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteClick(course)}
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+                          <Trash2 className="w-4 h-4" />
+                          {t.common.delete}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+
+                <CardContent className="p-5">
+                  <div className="mb-4">
+                    <h3 className="text-xl font-display font-bold line-clamp-1 mb-2 group-hover:text-primary transition-colors">
+                      {course.title}
+                    </h3>
+                    <p className="text-muted-foreground text-sm line-clamp-2 h-10">
+                      {course.description || "No description provided."}
+                    </p>
+                  </div>
+
+                  {/* Course Details Grid */}
+                  <div className="grid grid-cols-2 gap-3 mb-6">
+                    <div className="flex items-center gap-2 text-muted-foreground bg-accent/5 p-2 rounded-lg">
+                      <Clock className="w-4 h-4 text-accent" />
+                      <span className="text-xs font-semibold">{course.total_hours || 0}h</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-muted-foreground bg-accent/5 p-2 rounded-lg">
+                      <Layers className="w-4 h-4 text-accent" />
+                      <span className="text-xs font-semibold">{course.sessions_count || 0} {t.common.sessions}</span>
+                    </div>
+                  </div>
+
+                  {/* Pricing Section */}
+                  <div className="space-y-2 border-t pt-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="w-4 h-4 text-green-500" />
+                        <span className="text-lg font-black text-foreground">${Number(course.price || 0).toFixed(0)}</span>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold">{t.adminCourses.priceSYP.split('(')[0]}</p>
+                        <p className="text-sm font-bold text-accent">{Number(course.price_syp || 0).toLocaleString()} <span className="text-[10px]">ل.س</span></p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+
+                <div className="px-5 pb-5 grid grid-cols-2 gap-3">
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2 border-accent/20 hover:bg-accent/5"
+                    onClick={() => handleOpenDialog(course)}
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                    {t.common.edit}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="w-full gap-2 text-destructive hover:bg-destructive/10"
+                    onClick={() => handleDeleteClick(course)}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    {t.common.delete}
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Create/Edit Dialog */}
@@ -388,9 +491,54 @@ export default function AdminCourses() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="image">{t.adminCourses.courseImage}</Label>
+                <div className="flex flex-col gap-3">
+                  {(imagePreview || formData.image_url) && (
+                    <div className="relative w-full h-40 rounded-xl overflow-hidden border">
+                      <img
+                        src={imagePreview || formData.image_url}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-2 right-2 w-8 h-8 rounded-full"
+                        onClick={() => {
+                          setSelectedFile(null);
+                          setImagePreview(null);
+                          setFormData(prev => ({ ...prev, image_url: "" }));
+                        }}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-4">
+                    <Label
+                      htmlFor="image-upload"
+                      className="flex flex-1 items-center justify-center gap-2 h-20 border-2 border-dashed rounded-xl cursor-pointer hover:bg-muted/50 transition-colors"
+                    >
+                      <Upload className="w-5 h-5 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        {selectedFile ? selectedFile.name : t.common.create}
+                      </span>
+                      <Input
+                        id="image-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleFileChange}
+                      />
+                    </Label>
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="price">{t.adminCourses.price} ($)</Label>
+                  <Label htmlFor="price">{t.adminCourses.priceUSD}</Label>
                   <Input
                     id="price"
                     type="number"
@@ -401,23 +549,13 @@ export default function AdminCourses() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="points_reward">{t.adminCourses.pointsReward}</Label>
+                  <Label htmlFor="price_syp">{t.adminCourses.priceSYP}</Label>
                   <Input
-                    id="points_reward"
+                    id="price_syp"
                     type="number"
                     min="0"
-                    value={formData.points_reward}
-                    onChange={(e) => handleInputChange("points_reward", parseInt(e.target.value) || 0)}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="points_required">{t.adminCourses.pointsRequired}</Label>
-                  <Input
-                    id="points_required"
-                    type="number"
-                    min="0"
-                    value={formData.points_required}
-                    onChange={(e) => handleInputChange("points_required", parseInt(e.target.value) || 0)}
+                    value={formData.price_syp}
+                    onChange={(e) => handleInputChange("price_syp", parseInt(e.target.value) || 0)}
                   />
                 </div>
               </div>
@@ -463,6 +601,6 @@ export default function AdminCourses() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </DashboardLayout>
+    </DashboardLayout >
   );
 }
