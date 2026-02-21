@@ -323,4 +323,18 @@ export const en = {
     sessionCreateError: "Failed to create session.",
   },
 
+  // Footer
+  footer: {
+    tagline: "Your journey to mastery starts here",
+    quickLinks: "Quick Links",
+    home: "Home",
+    courses: "Courses",
+    offers: "Offers",
+    signIn: "Sign In",
+    followUs: "Follow Us",
+    contactUs: "Contact Us",
+    allRightsReserved: "All rights reserved",
+    madeWith: "Made with ❤️ in Syria",
+  },
+
 };

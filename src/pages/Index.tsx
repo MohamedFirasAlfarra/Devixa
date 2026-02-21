@@ -3,11 +3,9 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
-import ThemeToggle from "@/components/ThemeToggle";
-import { GraduationCap, BookOpen, Star, Users, ArrowRight, ArrowLeft, Play, FileText, Sparkles, Award, ChevronRight, Menu, X, Tag, Home, LogIn, LayoutDashboard } from "lucide-react";
+import { BookOpen, ArrowRight, ArrowLeft, Play, FileText, Sparkles, Award, ChevronRight, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import img1 from "@/assets/images/course-web.png";
 import img2 from "@/assets/images/course-mobile.png";
@@ -16,13 +14,14 @@ import img4 from "@/assets/images/course-ICDL.png";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import OfferCard from "@/components/courses/OfferCard";
-import Logo from "@/components/common/Logo";
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
 
 type Offer = Tables<"offers">;
 type Course = Tables<"courses">;
 
 export default function Index() {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
   const { t, dir, language } = useLanguage();
   const [offers, setOffers] = useState<(Offer & { courses: Course })[]>([]);
   const [loadingOffers, setLoadingOffers] = useState(true);
@@ -48,7 +47,9 @@ export default function Index() {
 
     fetchOffers();
   }, []);
+
   const ArrowIcon = dir === "rtl" ? ArrowLeft : ArrowRight;
+
   const slides = [
     {
       title: language === "ar" ? "تطوير مواقع ويب" : "Web Development",
@@ -94,7 +95,7 @@ export default function Index() {
       gradient: "from-amber-400 to-orange-500"
     },
     {
-      icon: Users,
+      icon: BookOpen,
       title: t.landing.features.expertMentors,
       description: t.landing.features.expertMentorsDesc,
       gradient: "from-purple-500 to-pink-500"
@@ -115,26 +116,15 @@ export default function Index() {
     {
       title: language === "ar" ? "الذكاء الاصطناعي" : "Artificial Intelligence",
       category: language === "ar" ? "مسار البيانات" : "Data Science",
-      image: img3 // Using UIUX image as fallback for AI for now
+      image: img3
     }
   ];
 
   const [api, setApi] = React.useState<any>();
   const [current, setCurrent] = React.useState(0);
-  const [isScrolled, setIsScrolled] = React.useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
-
-  React.useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   React.useEffect(() => {
     if (!api) return;
-
     setCurrent(api.selectedScrollSnap());
     api.on("select", () => {
       setCurrent(api.selectedScrollSnap());
@@ -143,211 +133,23 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background" dir={dir}>
-      {/* Navigation */}
-      <nav className={cn(
-        "fixed top-0 left-0 right-0 mx-auto z-50 transition-all duration-500",
-        "w-full  bg-background/80 backdrop-blur-xl",
-        isScrolled
-          ? "py-1 bg-background/80 backdrop-blur-xl shadow-xl"
-          : "py-1 glass-gooey"
-      )}>
-        <div className="container mx-auto px-6 flex items-center justify-between">
-          <div className="flex items-center">
-            <Link to="/">
-              <Logo imageClassName="h-28 md:h-24 lg:h-40" isNavbar />
-            </Link>
-          </div>
 
-          {/* Desktop Links */}
-          <div className="hidden md:flex items-center gap-8">
-            <Link to="/" className="text-foreground/80 hover:text-primary font-medium transition-colors">
-              {language === "ar" ? "الرئيسية" : "Home"}
-            </Link>
-            <Link to="/courses" className="text-foreground/80 hover:text-primary font-medium transition-colors">
-              {language === "ar" ? "الدورات" : "Courses"}
-            </Link>
-            <Link to="/offers" className="text-foreground/80 hover:text-primary font-medium transition-colors">
-              {language === "ar" ? "العروض" : "Offers"}
-            </Link>
-          </div>
+      {/* ── Navbar ── */}
+      <Navbar />
 
-          <div className="flex items-center gap-2 md:gap-4">
-            <div className="flex items-center gap-2">
-              <ThemeToggle />
-              <LanguageSwitcher />
-            </div>
-
-            <div className="hidden xs:block">
-              {user ? (
-                <Link to={isAdmin ? "/admin" : "/dashboard"}>
-                  <Button variant="default" className="rounded-full px-4 md:px-6 shadow-glow gradient-primary border-none">
-                    {t.landing.goToDashboard}
-                  </Button>
-                </Link>
-              ) : (
-                <Link to="/auth">
-                  <Button variant="default" className="rounded-full px-4 md:px-6 shadow-glow gradient-primary border-none">
-                    {t.common.signIn}
-                  </Button>
-                </Link>
-              )}
-            </div>
-
-            {/* Mobile Toggle */}
-            <button
-              className="md:hidden p-2 text-foreground hover:bg-accent/10 rounded-xl transition-colors"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Menu Backdrop */}
-        <div
-          className={cn(
-            "fixed inset-0 bg-background/40 backdrop-blur-md z-[55] md:hidden transition-all duration-500",
-            mobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"
-          )}
-          onClick={() => setMobileMenuOpen(false)}
-        />
-
-        {/* Mobile Menu Side Drawer */}
-        <div className={cn(
-          "fixed inset-y-0 z-[60] w-[85%] max-w-xs bg-card/98 backdrop-blur-2xl border-none shadow-[0_0_50px_rgba(0,0,0,0.3)] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] md:hidden flex flex-col p-8 pt-12 overflow-hidden",
-          language === "ar" ? "right-0" : "left-0",
-          mobileMenuOpen
-            ? "translate-x-0"
-            : (language === "ar" ? "translate-x-full" : "-translate-x-full")
-        )}>
-          {/* Decorative Colored Background Elements */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
-          <div className="absolute -top-12 -right-12 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="relative z-10 flex flex-col h-full">
-            {/* Drawer Header */}
-            <div className="flex items-center justify-between mb-12">
-              <Logo imageClassName="h-14" isNavbar />
-              <button
-                onClick={() => setMobileMenuOpen(false)}
-                className="p-3 rounded-2xl bg-accent/5 hover:bg-accent/10 transition-colors active:scale-95"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="flex flex-col gap-4">
-              <Link
-                to="/"
-                onClick={() => setMobileMenuOpen(false)}
-                className={cn(
-                  "group text-xl font-display font-black flex items-center gap-4 hover:text-primary transition-all p-4 rounded-2xl hover:bg-primary/5",
-                  mobileMenuOpen ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
-                  "delay-[100ms] duration-500"
-                )}
-              >
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors shadow-sm">
-                  <Home className="w-6 h-6" />
-                </div>
-                <span className="flex-1 text-start">{language === "ar" ? "الرئيسية" : "Home"}</span>
-                <ChevronRight className={cn("w-5 h-5 opacity-20 group-hover:opacity-100 transition-opacity", language === "ar" && "rotate-180")} />
-              </Link>
-
-              <Link
-                to="/courses"
-                onClick={() => setMobileMenuOpen(false)}
-                className={cn(
-                  "group text-xl font-display font-black flex items-center gap-4 hover:text-primary transition-all p-4 rounded-2xl hover:bg-accent/5",
-                  mobileMenuOpen ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
-                  "delay-[200ms] duration-500"
-                )}
-              >
-                <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center text-accent group-hover:bg-accent group-hover:text-accent-foreground transition-colors shadow-sm">
-                  <BookOpen className="w-6 h-6" />
-                </div>
-                <span className="flex-1 text-start">{language === "ar" ? "الدورات" : "Courses"}</span>
-                <ChevronRight className={cn("w-5 h-5 opacity-20 group-hover:opacity-100 transition-opacity", language === "ar" && "rotate-180")} />
-              </Link>
-
-              <Link
-                to="/offers"
-                onClick={() => setMobileMenuOpen(false)}
-                className={cn(
-                  "group text-xl font-display font-black flex items-center gap-4 hover:text-primary transition-all p-4 rounded-2xl hover:bg-destructive/5",
-                  mobileMenuOpen ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
-                  "delay-[300ms] duration-500"
-                )}
-              >
-                <div className="w-12 h-12 rounded-xl bg-destructive/10 flex items-center justify-center text-destructive group-hover:bg-destructive group-hover:text-destructive-foreground transition-colors shadow-sm">
-                  <Tag className="w-6 h-6" />
-                </div>
-                <span className="flex-1 text-start">{language === "ar" ? "العروض" : "Offers"}</span>
-                <ChevronRight className={cn("w-5 h-5 opacity-20 group-hover:opacity-100 transition-opacity", language === "ar" && "rotate-180")} />
-              </Link>
-
-              <div className={cn(
-                "mt-6 pt-8 border-t border-border/40 transition-all duration-700",
-                mobileMenuOpen ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0",
-                "delay-[400ms]"
-              )}>
-                {user ? (
-                  <Link to={isAdmin ? "/admin" : "/dashboard"} onClick={() => setMobileMenuOpen(false)}>
-                    <Button className="w-full rounded-2xl h-16 text-xl font-display font-black gradient-primary shadow-glow hover:scale-[1.02] active:scale-[0.98] transition-all gap-2">
-                      <LayoutDashboard className="w-6 h-6" />
-                      {t.landing.goToDashboard}
-                    </Button>
-                  </Link>
-                ) : (
-                  <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
-                    <Button className="w-full rounded-2xl h-16 text-xl font-display font-black gradient-primary shadow-glow hover:scale-[1.02] active:scale-[0.98] transition-all gap-2">
-                      <LogIn className="w-6 h-6" />
-                      {t.common.signIn}
-                    </Button>
-                  </Link>
-                )}
-              </div>
-            </div>
-
-            <div className={cn(
-              "mt-auto pt-8 flex flex-col items-center gap-4 transition-all duration-700 delay-[500ms]",
-              mobileMenuOpen ? "opacity-100 scale-100" : "opacity-0 scale-90"
-            )}>
-              <div className="text-muted-foreground text-sm font-bold opacity-30 flex items-center gap-2">
-                <div className="w-8 h-px bg-current" />
-                <span>© {new Date().getFullYear()} {t.common.brandName}</span>
-                <div className="w-8 h-px bg-current" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Hero Slider Section */}
+      {/* ── Hero Slider ── */}
       <section className="relative min-h-[90vh] py-16 flex items-center overflow-hidden bg-background">
         <Carousel
           setApi={setApi}
           className="w-full h-full pt-20"
-          opts={{
-            align: "start",
-            loop: true,
-            direction: dir,
-          }}
-          plugins={[
-            Autoplay({
-              delay: 3000,
-              stopOnInteraction: false,
-            }),
-          ]}
+          opts={{ align: "start", loop: true, direction: dir }}
+          plugins={[Autoplay({ delay: 3000, stopOnInteraction: false })]}
         >
           <CarouselContent className="h-full">
             {slides.map((slide, index) => (
               <CarouselItem key={index} className="basis-full h-full">
                 <div className="container mx-auto px-6 grid md:grid-cols-2 gap-12 items-center min-h-[75vh] py-10 relative">
-                  <div className={cn(
-                    "absolute -z-10 w-full h-full blur-[120px] opacity-20",
-                    slide.gradient
-                  )} />
+                  <div className={cn("absolute -z-10 w-full h-full blur-[120px] opacity-20", slide.gradient)} />
 
                   <div className="space-y-8 animate-fade-in">
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border-primary/20 text-primary font-semibold text-sm animate-bounce shadow-glow">
@@ -411,9 +213,7 @@ export default function Index() {
                 onClick={() => api?.scrollTo(index)}
                 className={cn(
                   "w-3 h-3 rounded-full transition-all duration-300",
-                  current === index
-                    ? "bg-primary w-8 shadow-glow"
-                    : "bg-primary/20 hover:bg-primary/40"
+                  current === index ? "bg-primary w-8 shadow-glow" : "bg-primary/20 hover:bg-primary/40"
                 )}
                 aria-label={`Go to slide ${index + 1}`}
               />
@@ -422,7 +222,7 @@ export default function Index() {
         </Carousel>
       </section>
 
-      {/* Featured Courses */}
+      {/* ── Featured Courses ── */}
       <section className="py-24 bg-secondary/10 min-h-screen">
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
@@ -457,7 +257,7 @@ export default function Index() {
                     </Button>
                     <Link to="/courses">
                       <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
-                        <ChevronRight className={`w-5 h-5 ${dir === 'rtl' ? 'rotate-180' : ''}`} />
+                        <ChevronRight className={`w-5 h-5 ${dir === "rtl" ? "rotate-180" : ""}`} />
                       </div>
                     </Link>
                   </div>
@@ -468,12 +268,12 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* ── Features ── */}
       <section className="py-32 relative overflow-hidden">
         <div className="container mx-auto px-6">
           <div className="text-center max-w-2xl mx-auto mb-20 space-y-4">
             <div className="text-primary font-bold tracking-widest uppercase text-sm">{t.landing.features.premiumCourses}</div>
-            <h2 className="text-4xl md:text-5xl font-display font-bold"> {t.common.brandName2}</h2>
+            <h2 className="text-4xl md:text-5xl font-display font-bold">{t.common.brandName2}</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-12">
             {features.map((feature, i) => (
@@ -494,7 +294,7 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Special Offers Section */}
+      {/* ── Special Offers ── */}
       <section className="py-24 relative overflow-hidden bg-background">
         <div className="absolute inset-0 bg-accent/5 -z-10" />
         <div className="container mx-auto px-6">
@@ -559,17 +359,9 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-12 border-t border-border/40">
-        <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center">
-            <Logo imageClassName="h-12" />
-          </div>
-          <div className="text-muted-foreground text-sm">
-            © {new Date().getFullYear()} {t.common.brandName}. {t.auth.copyright}
-          </div>
-        </div>
-      </footer>
+      {/* ── Footer ── */}
+      <Footer />
+
     </div>
   );
 }

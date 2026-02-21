@@ -366,4 +366,18 @@ export const ar = {
     selectCourseError: "يرجى اختيار دورة للعرض.",
     discountError: "يجب أن تكون نسبة الخصم أكبر من 0.",
   },
+
+  // Footer
+  footer: {
+    tagline: "رحلتك نحو الاحتراف تبدأ هنا",
+    quickLinks: "روابط سريعة",
+    home: "الرئيسية",
+    courses: "الدورات",
+    offers: "العروض",
+    signIn: "تسجيل الدخول",
+    followUs: "تابعنا على",
+    contactUs: "تواصل معنا",
+    allRightsReserved: "جميع الحقوق محفوظة",
+    madeWith: "صُنع بـ ❤️ في سوريا",
+  },
 };
