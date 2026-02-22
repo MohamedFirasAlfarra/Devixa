@@ -122,9 +122,9 @@ export default function Index() {
       image: img2
     },
     {
-      title: language === "ar" ? "الذكاء الاصطناعي" : "Artificial Intelligence",
+      title: language === "ar" ? "الأمن السيبراني" : "Cyber Securitye",
       category: language === "ar" ? "مسار البيانات" : "Data Science",
-      image: img3
+      image: img5
     }
   ];
 
