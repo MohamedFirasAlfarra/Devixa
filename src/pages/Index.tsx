@@ -295,26 +295,26 @@ export default function Index() {
       </section>
 
       {/* ── Special Offers ── */}
-      <section className="py-24 relative overflow-hidden bg-background">
+      <section className="py-16 md:py-24 relative overflow-hidden bg-background">
         <div className="absolute inset-0 bg-accent/5 -z-10" />
         <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 md:mb-16 gap-8">
             <div className="space-y-4 animate-slide-up">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent font-bold text-sm uppercase tracking-widest border border-accent/20">
-                <Tag className="w-4 h-4" />
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent font-bold text-xs md:text-sm uppercase tracking-widest border border-accent/20">
+                <Tag className="w-3 h-3 md:w-4 h-4" />
                 {language === "ar" ? "عروض حصرية" : "Exclusive Offers"}
               </div>
-              <h2 className="text-4xl md:text-5xl lg:text-6xl font-display font-black leading-tight text-foreground">
+              <h2 className="text-3xl md:text-5xl lg:text-6xl font-display font-black leading-tight text-foreground">
                 {t.courses.offersTitle}
               </h2>
-              <p className="text-xl text-muted-foreground max-w-2xl">
+              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl leading-relaxed">
                 {t.courses.offersSubtitle}
               </p>
             </div>
 
             {!user && (
-              <Link to="/auth?signup=true" className="animate-fade-in">
-                <Button className="rounded-xl px-8 h-14 text-lg font-bold gradient-primary shadow-glow hover:scale-105 transition-all">
+              <Link to="/auth?signup=true" className="animate-fade-in w-full md:w-auto">
+                <Button className="w-full md:w-auto rounded-xl px-8 h-12 md:h-14 text-base md:text-lg font-bold gradient-primary shadow-glow hover:scale-105 transition-all">
                   {t.landing.registerNow}
                 </Button>
               </Link>
@@ -322,13 +322,13 @@ export default function Index() {
           </div>
 
           {loadingOffers ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="h-80 rounded-3xl bg-muted/20 animate-pulse border border-border/50" />
               ))}
             </div>
           ) : offers.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {offers.map((offer, i) => (
                 <div key={offer.id} className="animate-slide-up" style={{ animationDelay: `${i * 100}ms` }}>
                   <OfferCard offer={offer} />
@@ -336,19 +336,21 @@ export default function Index() {
               ))}
             </div>
           ) : (
-            <div className="relative rounded-[3rem] overflow-hidden gradient-hero p-12 md:p-24 text-center text-white">
-              <div className="absolute inset-0 bg-black/10 backdrop-blur-sm" />
-              <div className="relative z-10 max-w-3xl mx-auto space-y-8">
-                <Sparkles className="w-16 h-16 mx-auto opacity-80" />
-                <h2 className="text-3xl md:text-5xl font-display font-black leading-tight">
-                  {t.courses.noOffers}
-                </h2>
-                <p className="text-xl text-white/80">
-                  {t.courses.noOffersDesc}
-                </p>
+            <div className="relative rounded-[2rem] md:rounded-[3rem] overflow-hidden gradient-hero p-8 md:p-16 lg:p-24 text-center text-white shadow-2xl">
+              <div className="absolute inset-0 bg-black/20 backdrop-blur-md" />
+              <div className="relative z-10 max-w-3xl mx-auto space-y-6 md:space-y-8">
+                <Sparkles className="w-12 h-12 md:w-16 h-16 mx-auto opacity-80 animate-pulse" />
+                <div className="space-y-3 md:space-y-4">
+                  <h2 className="text-2xl md:text-4xl lg:text-5xl font-display font-black leading-tight">
+                    {t.courses.noOffers}
+                  </h2>
+                  <p className="text-base md:text-lg lg:text-xl text-white/80 max-w-xl mx-auto">
+                    {t.courses.noOffersDesc}
+                  </p>
+                </div>
                 <div className="pt-4">
                   <Link to="/courses">
-                    <Button size="lg" variant="secondary" className="rounded-full px-12 text-xl h-16 font-bold shadow-2xl hover:scale-105 transition-transform">
+                    <Button size="lg" variant="secondary" className="rounded-full px-8 md:px-12 h-12 md:h-14 lg:h-16 text-base md:text-lg lg:text-xl font-bold shadow-2xl hover:scale-105 transition-transform active:scale-95">
                       {language === "ar" ? "تصفح جميع الدورات" : "Browse All Courses"}
                     </Button>
                   </Link>

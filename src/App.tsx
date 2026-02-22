@@ -27,7 +27,7 @@ import Profile from "./pages/Profile";
 import ChangePassword from "./pages/ChangePassword";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
-import { CustomCursor } from "@/components/common/CustomCursor";
+
 
 const queryClient = new QueryClient();
 
@@ -83,7 +83,7 @@ const App = () => (
     <ThemeProvider defaultTheme="system" storageKey="learnhub-theme">
       <LanguageProvider>
         <TooltipProvider>
-          <CustomCursor />
+
           <Toaster />
           <Sonner />
           <HashRouter>
