@@ -11,6 +11,7 @@ import img1 from "@/assets/images/course-web.png";
 import img2 from "@/assets/images/course-mobile.png";
 import img3 from "@/assets/images/course-UIUX.png";
 import img4 from "@/assets/images/course-ICDL.png";
+import img5 from "@/assets/images/course-cyberSecurity.png";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import OfferCard from "@/components/courses/OfferCard";
@@ -78,6 +79,13 @@ export default function Index() {
       description: language === "ar" ? "احصل على المهارات الأساسية في الحاسوب والبرامج المكتبية بشهادة معترف بها دولياً." : "Gain essential computer and office software skills with an internationally recognized certificate.",
       image: img4,
       gradient: "from-amber-600/20 to-orange-600/20"
+    },
+    {
+      title: language === "ar" ? "كورس الأمن السيبراني الشامل" : "Comprehensive Cybersecurity",
+      subtitle: language === "ar" ? "احمِ عالمك الرقمي" : "Protect Your Digital World",
+      description: language === "ar" ? "تعلم تقنيات حماية الأنظمة والشبكات، واحتراف القرصنة الأخلاقية والدفاع السيبراني المتقدم." : "Learn system and network protection techniques, master ethical hacking and advanced cyber defense.",
+      image: img5,
+      gradient: "from-indigo-600/20 to-violet-600/20"
     }
   ];
 
