@@ -14,8 +14,6 @@ interface Course {
     price: number;
     price_syp: number;
     image_url: string | null;
-    points_reward: number;
-    points_required: number;
 }
 
 interface CourseDetailsModalProps {
@@ -79,16 +77,6 @@ export default function CourseDetailsModal({ course, isOpen, onClose }: CourseDe
                                         <Users className="w-5 h-5 mx-auto mb-2 text-accent" />
                                         <div className="text-sm font-bold">{course.sessions_count}</div>
                                         <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{t.common.sessions}</div>
-                                    </div>
-                                    <div className="p-4 rounded-xl bg-warning/5 border border-warning/10 text-center">
-                                        <Star className="w-5 h-5 mx-auto mb-2 text-warning" />
-                                        <div className="text-sm font-bold">+{course.points_reward}</div>
-                                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{t.common.pts}</div>
-                                    </div>
-                                    <div className="p-4 rounded-xl bg-secondary/5 border border-secondary/10 text-center">
-                                        <Award className="w-5 h-5 mx-auto mb-2 text-secondary" />
-                                        <div className="text-sm font-bold">{course.points_required}</div>
-                                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Req. {t.common.pts}</div>
                                     </div>
                                 </div>
 

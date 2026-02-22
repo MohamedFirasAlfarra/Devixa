@@ -25,7 +25,6 @@ export const ar = {
     signUp: "إنشاء حساب",
     brandName: "Devixa",
     brandName2: "لماذا  تختار Devixa؟",
-    pts: "نقطة",
   },
 
   // Navigation

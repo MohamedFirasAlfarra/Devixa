@@ -22,7 +22,6 @@ interface Quiz {
     id: string;
     title: string;
     passing_score: number;
-    reward_points: number;
 }
 
 

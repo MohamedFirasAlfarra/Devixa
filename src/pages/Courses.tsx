@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { BookOpen, Clock, Users, Star, Tag, Check, Info, Wallet, CreditCard, Send } from "lucide-react";
+import { BookOpen, Clock, Users, Tag, Check, Info, Wallet, CreditCard, Send } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -29,8 +29,6 @@ interface Course {
   price: number;
   price_syp: number;
   image_url: string | null;
-  points_reward: number;
-  points_required: number;
 }
 
 interface Offer {
@@ -118,7 +116,7 @@ export default function Courses() {
     setPaymentModalOpen(true);
   };
 
-  const handleEnroll = async (course: Course, usePoints: boolean, paymentMethod?: string) => {
+  const handleEnroll = async (course: Course, paymentMethod?: string) => {
     if (!user) return;
 
     setEnrolling(course.id);
@@ -134,86 +132,19 @@ export default function Courses() {
 
       const batchId = batches?.[0]?.id || null;
 
-      if (usePoints) {
-        if ((profile?.total_points || 0) < course.points_required) {
-          toast({
-            title: t.courses.insufficientPoints,
-            description: t.courses.insufficientPointsDesc.replace("{points}", String(course.points_required)),
-            variant: "destructive",
-          });
-          return;
-        }
+      const { error: enrollError } = await supabase.from("enrollments").insert({
+        user_id: user.id,
+        course_id: course.id,
+        batch_id: batchId,
+        payment_method: paymentMethod || "cash",
+      });
 
-        const { error: enrollError } = await supabase.from("enrollments").insert({
-          user_id: user.id,
-          course_id: course.id,
-          batch_id: batchId,
-          payment_method: "points",
-          points_used: course.points_required,
-        });
+      if (enrollError) throw enrollError;
 
-        if (enrollError) throw enrollError;
-
-        await supabase
-          .from("profiles")
-          .update({
-            total_points: (profile?.total_points || 0) - course.points_required,
-          })
-          .eq("user_id", user.id);
-
-        await supabase.from("points_history").insert({
-          user_id: user.id,
-          points: -course.points_required,
-          type: "redemption",
-          description: `Redeemed for ${course.title}`,
-          course_id: course.id,
-        });
-
-        await refreshProfile();
-
-        toast({
-          title: t.courses.redeemSuccess,
-          description: t.courses.redeemSuccessDesc
-            .replace("{course}", course.title)
-            .replace("{points}", String(course.points_required)),
-        });
-      } else {
-        const { error: enrollError } = await supabase.from("enrollments").insert({
-          user_id: user.id,
-          course_id: course.id,
-          batch_id: batchId,
-          payment_method: paymentMethod || "cash",
-        });
-
-        if (enrollError) throw enrollError;
-
-        if (course.points_reward > 0) {
-          await supabase
-            .from("profiles")
-            .update({
-              total_points: (profile?.total_points || 0) + course.points_reward,
-            })
-            .eq("user_id", user.id);
-
-          await supabase.from("points_history").insert({
-            user_id: user.id,
-            points: course.points_reward,
-            type: "registration",
-            description: `Registration bonus for ${course.title}`,
-            course_id: course.id,
-          });
-
-          await refreshProfile();
-        }
-
-        toast({
-          title: t.courses.enrollSuccess,
-          description: `${t.courses.enrollSuccessDesc.replace("{course}", course.title)} ${course.points_reward > 0
-            ? t.courses.pointsEarned.replace("{points}", String(course.points_reward))
-            : ""
-            }`,
-        });
-      }
+      toast({
+        title: t.courses.enrollSuccess,
+        description: t.courses.enrollSuccessDesc.replace("{course}", course.title),
+      });
 
       const { data: enrollmentData } = await supabase
         .from("enrollments")
@@ -271,9 +202,6 @@ export default function Courses() {
             {courses.map((course) => {
               const offer = getOfferForCourse(course.id);
               const enrolled = isEnrolled(course.id);
-              const canRedeem =
-                course.points_required > 0 &&
-                (profile?.total_points || 0) >= course.points_required;
               const discountedPrice = offer
                 ? course.price * (1 - offer.discount_percentage / 100)
                 : course.price;
@@ -323,18 +251,12 @@ export default function Courses() {
                     <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Clock className="w-4 h-4" />
-                        {course.total_hours}{t.common.hours.charAt(0)}
+                        {course.total_hours} {t.common.hours}
                       </div>
                       <div className="flex items-center gap-1">
                         <Users className="w-4 h-4" />
                         {course.sessions_count} {t.common.sessions}
                       </div>
-                      {course.points_reward > 0 && (
-                        <div className="flex items-center gap-1 text-accent">
-                          <Star className="w-4 h-4" />
-                          +{course.points_reward} {t.common.pts}
-                        </div>
-                      )}
                     </div>
 
                     {/* Pricing */}
@@ -361,7 +283,7 @@ export default function Courses() {
                     {offer && offer.max_students && (
                       <div className="flex items-center gap-1 text-sm text-warning">
                         <Tag className="w-4 h-4" />
-                        {offer.max_students - offer.used_count} {t.courses.spotsLeft}
+                        {offer.max_students - offer.used_count} spots left
                       </div>
                     )}
 
@@ -385,28 +307,15 @@ export default function Courses() {
                           {t.courses.enrolled}
                         </Button>
                       ) : (
-                        <>
-                          <Button
-                            className="w-full gradient-primary hover:opacity-90"
-                            onClick={() => handleEnrollClick(course)}
-                            disabled={enrolling === course.id}
-                          >
-                            {enrolling === course.id
-                              ? t.courses.enrolling
-                              : `${t.courses.enroll} - $${discountedPrice.toFixed(0)}`}
-                          </Button>
-                          {course.points_required > 0 && (
-                            <Button
-                              variant="outline"
-                              className="w-full"
-                              onClick={() => handleEnroll(course, true)}
-                              disabled={!canRedeem || enrolling === course.id}
-                            >
-                              <Star className="w-4 h-4 me-2" />
-                              {t.courses.redeem} ({course.points_required} {t.common.pts})
-                            </Button>
-                          )}
-                        </>
+                        <Button
+                          className="w-full gradient-primary hover:opacity-90"
+                          onClick={() => handleEnrollClick(course)}
+                          disabled={enrolling === course.id}
+                        >
+                          {enrolling === course.id
+                            ? t.courses.enrolling
+                            : `${t.courses.enroll} - $${discountedPrice.toFixed(0)}`}
+                        </Button>
                       )}
                     </div>
                   </CardContent>
@@ -494,7 +403,7 @@ export default function Courses() {
             <Button
               onClick={() => {
                 if (selectedCourse) {
-                  handleEnroll(selectedCourse, false, selectedPaymentMethod || "shamiCash");
+                  handleEnroll(selectedCourse, selectedPaymentMethod || "shamiCash");
                   setPaymentModalOpen(false);
                 }
               }}
@@ -508,3 +417,4 @@ export default function Courses() {
     </DashboardLayout>
   );
 }
+

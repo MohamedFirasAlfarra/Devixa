@@ -211,11 +211,6 @@ export default function CourseDetails() {
                                 <div className="text-xs uppercase font-bold tracking-widest text-muted-foreground">{t.common.sessions}</div>
                             </div>
                             <div className="p-6 rounded-3xl bg-card border shadow-sm hover:shadow-md transition-all text-center group">
-                                <Star className="w-6 h-6 mx-auto mb-3 text-yellow-500 group-hover:scale-110 transition-transform" />
-                                <div className="text-xl font-black">+{course.points_reward}</div>
-                                <div className="text-xs uppercase font-bold tracking-widest text-muted-foreground">{t.common.pts}</div>
-                            </div>
-                            <div className="p-6 rounded-3xl bg-card border shadow-sm hover:shadow-md transition-all text-center group">
                                 <ShieldCheck className="w-6 h-6 mx-auto mb-3 text-green-500 group-hover:scale-110 transition-transform" />
                                 <div className="text-xl font-black">Cert.</div>
                                 <div className="text-xs uppercase font-bold tracking-widest text-muted-foreground">Certified</div>

@@ -14,6 +14,7 @@ export const en = {
     status: "Status",
     active: "Active",
     inactive: "Inactive",
+    hours: "Hours",
     sessions: "sessions",
     minutes: "min",
     seconds: "sec",
@@ -23,8 +24,6 @@ export const en = {
     signUp: "Sign Up",
     brandName: "Devixa",
     brandName2: " Why choose Devixa?",
-    pts: "Pts",
-    hours: "Hours",
   },
 
   // Navigation
