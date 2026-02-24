@@ -11,6 +11,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Courses from "./pages/Courses";
 import MyCourses from "./pages/MyCourses";
+import LectureView from "./pages/LectureView";
 import Quiz from "./pages/Quiz";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminCourses from "./pages/admin/AdminCourses";
@@ -20,6 +21,8 @@ import AdminBatches from "./pages/admin/AdminBatches";
 import AdminAttendance from "./pages/admin/AdminAttendance";
 import AdminStats from "./pages/admin/AdminStats";
 import AdminOffers from "./pages/admin/AdminOffers";
+import AdminExams from "./pages/admin/AdminExams";
+import AdminLessons from "./pages/admin/AdminLessons";
 import Offers from "./pages/Offers";
 import CourseDetails from "./pages/CourseDetails";
 import NotFound from "./pages/NotFound";
@@ -60,6 +63,7 @@ function AppRoutes() {
       <Route path="/courses/:id" element={<ProtectedRoute><CourseDetails /></ProtectedRoute>} />
       <Route path="/offers" element={<ProtectedRoute><Offers /></ProtectedRoute>} />
       <Route path="/my-courses" element={<ProtectedRoute><MyCourses /></ProtectedRoute>} />
+      <Route path="/lecture/:sessionId" element={<ProtectedRoute><LectureView /></ProtectedRoute>} />
       <Route path="/quiz/:courseId" element={<ProtectedRoute><Quiz /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
@@ -72,6 +76,8 @@ function AppRoutes() {
       <Route path="/admin/batches" element={<ProtectedRoute adminOnly><AdminBatches /></ProtectedRoute>} />
       <Route path="/admin/attendance" element={<ProtectedRoute adminOnly><AdminAttendance /></ProtectedRoute>} />
       <Route path="/admin/offers" element={<ProtectedRoute adminOnly><AdminOffers /></ProtectedRoute>} />
+      <Route path="/admin/exams" element={<ProtectedRoute adminOnly><AdminExams /></ProtectedRoute>} />
+      <Route path="/admin/courses/:courseId/lessons" element={<ProtectedRoute adminOnly><AdminLessons /></ProtectedRoute>} />
       <Route path="/admin/stats" element={<ProtectedRoute adminOnly><AdminStats /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
@@ -86,7 +92,7 @@ const App = () => (
 
           <Toaster />
           <Sonner />
-          <HashRouter>
+          <HashRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <AuthProvider>
               <AppRoutes />
             </AuthProvider>

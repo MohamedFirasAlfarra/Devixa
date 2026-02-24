@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -34,7 +35,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, BookOpen, Loader2, Upload, X, Clock, Calendar, DollarSign, Layers, CheckCircle2, MoreVertical } from "lucide-react";
+import { Plus, Pencil, Trash2, BookOpen, Loader2, Upload, X, Clock, Calendar, DollarSign, Layers, CheckCircle2, MoreVertical, PlayCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -71,6 +72,7 @@ const defaultFormData: CourseFormData = {
 
 export default function AdminCourses() {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -365,6 +367,13 @@ export default function AdminCourses() {
                           {t.common.edit}
                         </DropdownMenuItem>
                         <DropdownMenuItem
+                          onClick={() => navigate(`/admin/courses/${course.id}/lessons`)}
+                          className="gap-2 cursor-pointer"
+                        >
+                          <PlayCircle className="w-4 h-4 text-accent" />
+                          {t.adminLessons.manageLessons}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
                           onClick={() => handleDeleteClick(course)}
                           className="gap-2 cursor-pointer text-destructive focus:text-destructive"
                         >
@@ -413,23 +422,32 @@ export default function AdminCourses() {
                   </div>
                 </CardContent>
 
-                <div className="px-5 pb-5 grid grid-cols-2 gap-3">
+                <div className="px-5 pb-5 flex flex-col gap-2">
                   <Button
-                    variant="outline"
-                    className="w-full gap-2 border-accent/20 hover:bg-accent/5"
-                    onClick={() => handleOpenDialog(course)}
+                    className="w-full gap-2 gradient-accent rounded-xl font-bold h-11"
+                    onClick={() => navigate(`/admin/courses/${course.id}/lessons`)}
                   >
-                    <Pencil className="w-3.5 h-3.5" />
-                    {t.common.edit}
+                    <PlayCircle className="w-4 h-4" />
+                    {t.adminLessons.manageLessons}
                   </Button>
-                  <Button
-                    variant="ghost"
-                    className="w-full gap-2 text-destructive hover:bg-destructive/10"
-                    onClick={() => handleDeleteClick(course)}
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    {t.common.delete}
-                  </Button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2 border-accent/20 hover:bg-accent/5 h-10 rounded-xl"
+                      onClick={() => handleOpenDialog(course)}
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                      {t.common.edit}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="w-full gap-2 text-destructive hover:bg-destructive/10 h-10 rounded-xl"
+                      onClick={() => handleDeleteClick(course)}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      {t.common.delete}
+                    </Button>
+                  </div>
                 </div>
               </Card>
             ))}

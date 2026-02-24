@@ -25,6 +25,7 @@ export const ar = {
     signUp: "إنشاء حساب",
     brandName: "Devixa",
     brandName2: "لماذا  تختار Devixa؟",
+    pending: "قيد الانتظار",
   },
 
   // Navigation
@@ -39,6 +40,8 @@ export const ar = {
     offers: "العروض",
     profile: "الملف الشخصي",
     batches: "الدفعات",
+    exams: "الاختبارات",
+    lessons: "الدروس",
   },
 
   // My Courses page
@@ -50,11 +53,18 @@ export const ar = {
     courseProgress: "تقدم الدورة",
     sessions: "المحاضرات",
     noSessions: "لا توجد محاضرات بعد",
-    startQuiz: "ابدأ الاختبار النهائي",
-    quizCompleted: "تم إكمال الاختبار",
-    quizNotAvailable: "الاختبار متاح فقط بعد إكمال الكورس بنسبة 100%"
+    startQuiz: "بدء الاختبار النهائي",
+    quizCompleted: "تم اجتياز الاختبار",
+    quizNotAvailable: "الاختبار مقفل (أنهِ الكورس أولاً)",
+    watchLecture: "مشاهدة المحاضرة",
+    lectureCompleted: "تم إنهاء المحاضرة",
+    markAsCompleted: "تم إنهاء المحاضرة",
+    backToCourse: "العودة للكورس",
+    lectureTitle: "محاضرة",
+    noVideo: "لا يوجد فيديو متاح لهذه الجلسة.",
+    browseCourses: "تصفح الدورات",
   },
-  quiz: {
+  exam: {
     title: "الاختبار النهائي: {course}",
     questionCount: "سؤال {current} من {total}",
     next: "التالي",
@@ -69,7 +79,13 @@ export const ar = {
     alreadyAttempted: "لقد قمت بإجراء هذا الاختبار مسبقاً",
     loading: "جاري تحميل الأسئلة...",
     notFound: "لم يتم العثور على الاختبار",
-    errorSubmit: "حدث خطأ أثناء حفظ النتيجة، يرجى المحاولة مرة أخرى"
+    errorSubmit: "حدث خطأ أثناء حفظ النتيجة، يرجى المحاولة مرة أخرى",
+    timeRemaining: "الوقت المتبقي",
+    minutes: "دقيقة",
+    seconds: "ثانية",
+    retry: "إعادة المحاولة",
+    passed: "ناجح",
+    failed: "راسب"
   },
 
   // Landing page
@@ -299,18 +315,12 @@ export const ar = {
     completedCourses: "الدورات المكتملة",
     noCompleted: "لا يوجد دورات مكتملة بعد.",
   },
-  adminBatches: {
-    subtitle: "إدارة دفعات التعلم ومجموعات الطلاب.",
-  },
-  adminStats: {
-    subtitle: "عرض إحصائيات المنصة ونموها.",
-  },
   adminAttendance: {
     subtitle: "تتبع وإدارة حضور الطلاب.",
     selectBatch: "اختر الدفعة",
     selectPlaceholder: "اختر دفعة للبدء",
     addSession: "إضافة جلسة جديدة",
-    noBatches: "لم يتم العثور على دفعات نشطة.",
+    noBatches: "لا يوجد طلاب مسجلون في هذه الدفعة بعد",
     noSessions: "لا توجد جلسات لهذه الدفعة.",
     sessionTitle: "عنوان الجلسة",
     sessionDate: "تاريخ الجلسة",
@@ -321,11 +331,47 @@ export const ar = {
     absent: "غائب",
     saveSuccess: "تم تحديث الحضور بنجاح.",
     saveError: "فشل في تحديث الحضور.",
+    videoUrl: "رابط فيديو المحاضرة",
+    videoDescription: "وصف المحاضرة",
+    videoUrlPlaceholder: "رابط تضمين فيديو تلغرام",
+    editSession: "تعديل الجلسة",
+    updateSessionTitle: "تحديث إعدادات الجلسة",
+    updateSessionDesc: "تحديث العنوان أو التاريخ أو المدة أو الفيديو لهذه الجلسة.",
     createSessionTitle: "إنشاء جلسة",
     createSessionDesc: "إضافة جلسة جديدة لهذه الدفعة.",
     createBtn: "إنشاء الجلسة",
     sessionCreated: "تم إنشاء الجلسة بنجاح.",
     sessionCreateError: "فشل في إنشاء الجلسة.",
+  },
+  adminBatches: {
+    subtitle: "إدارة دفعات التعلم ومجموعات الطلاب.",
+  },
+  adminStats: {
+    subtitle: "عرض إحصائيات المنصة ونموها.",
+  },
+
+  // Admin Exams
+  adminExams: {
+    title: "اختبارات الدورات",
+    subtitle: "إدارة الاختبارات وأسئلة التقييم.",
+    addExam: "إنشاء اختبار",
+    editExam: "تعديل الاختبار",
+    noExam: "لا يوجد اختبار متاح لهذا الكورس.",
+    createExam: "قم بإنشاء اختبار جديد للبدء.",
+    passingScore: "درجة النجاح (%)",
+    rewardPoints: "نقاط المكافأة",
+    timeLimit: "الوقت المحدد (بالدقائق)",
+    saveExam: "حفظ إعدادات الاختبار",
+    addingQuestion: "إضافة سؤال",
+    questionText: "نص السؤال",
+    options: "الخيارات",
+    correctOption: "الخيار الصحيح",
+    addOption: "إضافة خيار",
+    removeQuestion: "حذف السؤال",
+    addQuestion: "إضافة سؤال جديد",
+    saveSuccess: "تم حفظ الاختبار بنجاح.",
+    saveError: "فشل في حفظ الاختبار.",
+    selectCourse: "اختر دورة لعرض أو إنشاء الاختبار الخاص بها",
   },
 
   // Admin Offers
@@ -378,5 +424,21 @@ export const ar = {
     contactUs: "تواصل معنا",
     allRightsReserved: "جميع الحقوق محفوظة",
     madeWith: "صُنع بـ ❤️ في سوريا",
+  },
+  adminLessons: {
+    title: "إدارة الدروس",
+    subtitle: "إضافة وترتيب دروس الكورس",
+    addLesson: "إضافة درس",
+    editLesson: "تعديل الدرس",
+    noLessons: "لا توجد دروس بعد",
+    lessonTitle: "عنوان الدرس",
+    orderNumber: "رقم الترتيب",
+    videoUrl: "رابط فيديو تلغرام",
+    duration: "المدة (ساعات)",
+    deleteLesson: "حذف الدرس",
+    deleteConfirm: "هل أنت متأكد من حذف الدرس \"{title}\"؟",
+    saveSuccess: "تم حفظ الدرس بنجاح",
+    saveError: "فشل في حفظ الدرس",
+    manageLessons: "إدارة الدروس",
   },
 };

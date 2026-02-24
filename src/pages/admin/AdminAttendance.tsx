@@ -12,27 +12,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
+
 interface Batch {
     id: string;
     name: string;
     course_id: string;
     courses: { title: string; };
 }
+
 interface CourseSession {
     id: string;
     batch_id: string;
     title: string;
     session_date: string;
     duration_hours: number;
+    video_url?: string;
+    video_description?: string;
 }
+
 interface EnrollmentWithProfile {
     user_id: string;
     profiles: { full_name: string | null; };
 }
-interface Attendance {
-    user_id: string;
-    attended: boolean;
-}
+
 export default function AdminAttendance() {
     const { t, dir } = useLanguage();
     const { toast } = useToast();
@@ -40,17 +42,35 @@ export default function AdminAttendance() {
     const [batches, setBatches] = useState<Batch[]>([]);
     const [selectedBatchId, setSelectedBatchId] = useState<string>("");
     const [sessions, setSessions] = useState<CourseSession[]>([]);
+
+    // Create Session State
     const [isAddSessionOpen, setIsAddSessionOpen] = useState(false);
     const [newSession, setNewSession] = useState({
         title: "",
         date: new Date().toISOString().split('T')[0],
-        duration: 1
+        duration: 1,
+        videoUrl: "",
+        videoDescription: ""
     });
+
+    // Edit Session State
+    const [isEditSessionOpen, setIsEditSessionOpen] = useState(false);
+    const [editingSession, setEditingSession] = useState<CourseSession | null>(null);
+    const [editForm, setEditForm] = useState({
+        title: "",
+        date: "",
+        duration: 1,
+        videoUrl: "",
+        videoDescription: ""
+    });
+
+    // Attendance State
     const [isMarkAttendanceOpen, setIsMarkAttendanceOpen] = useState(false);
     const [selectedSession, setSelectedSession] = useState<CourseSession | null>(null);
     const [students, setStudents] = useState<EnrollmentWithProfile[]>([]);
     const [attendanceMap, setAttendanceMap] = useState<Record<string, boolean>>({});
     const [savingAttendance, setSavingAttendance] = useState(false);
+
     useEffect(() => {
         fetchBatches();
     }, []);
@@ -113,14 +133,55 @@ export default function AdminAttendance() {
                     batch_id: selectedBatchId,
                     title: newSession.title,
                     session_date: newSession.date,
-                    duration_hours: newSession.duration
+                    duration_hours: newSession.duration,
+                    video_url: newSession.videoUrl,
+                    video_description: newSession.videoDescription
                 });
 
             if (error) throw error;
 
             toast({ title: t.adminAttendance.sessionCreated });
             setIsAddSessionOpen(false);
-            setNewSession({ title: "", date: new Date().toISOString().split('T')[0], duration: 1 });
+            setNewSession({ title: "", date: new Date().toISOString().split('T')[0], duration: 1, videoUrl: "", videoDescription: "" });
+            fetchSessions(selectedBatchId);
+        } catch (error: any) {
+            toast({
+                title: t.common.error,
+                description: error.message,
+                variant: "destructive",
+            });
+        }
+    };
+
+    const openEditSession = (session: CourseSession) => {
+        setEditingSession(session);
+        setEditForm({
+            title: session.title,
+            date: session.session_date,
+            duration: session.duration_hours,
+            videoUrl: session.video_url || "",
+            videoDescription: session.video_description || ""
+        });
+        setIsEditSessionOpen(true);
+    };
+
+    const handleUpdateSession = async () => {
+        if (!editingSession || !editForm.title) return;
+        try {
+            const { error } = await supabase
+                .from('course_sessions')
+                .update({
+                    title: editForm.title,
+                    session_date: editForm.date,
+                    duration_hours: editForm.duration,
+                    video_url: editForm.videoUrl,
+                    video_description: editForm.videoDescription
+                })
+                .eq('id', editingSession.id);
+
+            if (error) throw error;
+            toast({ title: t.adminAttendance.saveSuccess });
+            setIsEditSessionOpen(false);
             fetchSessions(selectedBatchId);
         } catch (error: any) {
             toast({
@@ -144,6 +205,7 @@ export default function AdminAttendance() {
 
             if (studentsError) throw studentsError;
             setStudents((studentsData as any[]) || []);
+
             const { data: attData, error: attError } = await supabase
                 .from('attendance')
                 .select('user_id, attended')
@@ -168,6 +230,7 @@ export default function AdminAttendance() {
     const handleToggleAttendance = (userId: string, attended: boolean) => {
         setAttendanceMap(prev => ({ ...prev, [userId]: attended }));
     };
+
     const saveAttendance = async () => {
         if (!selectedSession) return;
         try {
@@ -182,6 +245,7 @@ export default function AdminAttendance() {
             const { error } = await supabase
                 .from('attendance')
                 .upsert(attendanceData, { onConflict: 'session_id, user_id' });
+
             if (error) throw error;
 
             toast({ title: t.adminAttendance.saveSuccess });
@@ -198,6 +262,7 @@ export default function AdminAttendance() {
     };
 
     const ArrowIcon = dir === 'rtl' ? ChevronLeft : ChevronRight;
+
     return (
         <DashboardLayout>
             <div className="space-y-8">
@@ -213,6 +278,7 @@ export default function AdminAttendance() {
                         </Button>
                     )}
                 </div>
+
                 <Card className="border-accent/10">
                     <CardHeader className="pb-3">
                         <CardTitle className="text-lg flex items-center gap-2">
@@ -241,13 +307,25 @@ export default function AdminAttendance() {
                         {sessions.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {sessions.map((session) => (
-                                    <Card key={session.id} className="hover:shadow-md transition-shadow duration-300">
-                                        <CardHeader className="pb-3">
-                                            <CardTitle className="text-lg">{session.title}</CardTitle>
-                                            <CardDescription className="flex items-center gap-1.5">
-                                                <Calendar className="w-3.5 h-3.5" />
-                                                {new Date(session.session_date).toLocaleDateString()}
-                                            </CardDescription>
+                                    <Card key={session.id} className="hover:shadow-md transition-all duration-300 group">
+                                        <CardHeader className="pb-3 relative">
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <CardTitle className="text-lg">{session.title}</CardTitle>
+                                                    <CardDescription className="flex items-center gap-1.5">
+                                                        <Calendar className="w-3.5 h-3.5" />
+                                                        {new Date(session.session_date).toLocaleDateString()}
+                                                    </CardDescription>
+                                                </div>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    onClick={() => openEditSession(session)}
+                                                >
+                                                    {t.adminAttendance.editSession}
+                                                </Button>
+                                            </div>
                                         </CardHeader>
                                         <CardContent>
                                             <Button
@@ -274,6 +352,7 @@ export default function AdminAttendance() {
                     </div>
                 )}
 
+                {/* Add Session Dialog */}
                 <Dialog open={isAddSessionOpen} onOpenChange={setIsAddSessionOpen}>
                     <DialogContent>
                         <DialogHeader>
@@ -310,6 +389,23 @@ export default function AdminAttendance() {
                                     />
                                 </div>
                             </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="videoUrl">{t.adminAttendance.videoUrl}</Label>
+                                <Input
+                                    id="videoUrl"
+                                    placeholder={t.adminAttendance.videoUrlPlaceholder}
+                                    value={newSession.videoUrl}
+                                    onChange={(e) => setNewSession({ ...newSession, videoUrl: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="videoDescription">{t.adminAttendance.videoDescription}</Label>
+                                <Input
+                                    id="videoDescription"
+                                    value={newSession.videoDescription}
+                                    onChange={(e) => setNewSession({ ...newSession, videoDescription: e.target.value })}
+                                />
+                            </div>
                         </div>
                         <DialogFooter>
                             <Button variant="outline" onClick={() => setIsAddSessionOpen(false)}>{t.common.cancel}</Button>
@@ -318,6 +414,69 @@ export default function AdminAttendance() {
                     </DialogContent>
                 </Dialog>
 
+                {/* Edit Session Dialog */}
+                <Dialog open={isEditSessionOpen} onOpenChange={setIsEditSessionOpen}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>{t.adminAttendance.updateSessionTitle}</DialogTitle>
+                            <DialogDescription>{t.adminAttendance.updateSessionDesc}</DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-title">{t.adminAttendance.sessionTitle}</Label>
+                                <Input
+                                    id="edit-title"
+                                    value={editForm.title}
+                                    onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit-date">{t.adminAttendance.sessionDate}</Label>
+                                    <Input
+                                        id="edit-date"
+                                        type="date"
+                                        value={editForm.date}
+                                        onChange={(e) => setEditForm({ ...editForm, date: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit-duration">{t.common.hours}</Label>
+                                    <Input
+                                        id="edit-duration"
+                                        type="number"
+                                        step="0.1"
+                                        value={editForm.duration}
+                                        onChange={(e) => setEditForm({ ...editForm, duration: parseFloat(e.target.value) })}
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-videoUrl">{t.adminAttendance.videoUrl}</Label>
+                                <Input
+                                    id="edit-videoUrl"
+                                    placeholder={t.adminAttendance.videoUrlPlaceholder}
+                                    value={editForm.videoUrl}
+                                    onChange={(e) => setEditForm({ ...editForm, videoUrl: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-videoDescription">{t.adminAttendance.videoDescription}</Label>
+                                <Input
+                                    id="edit-videoDescription"
+                                    value={editForm.videoDescription}
+                                    onChange={(e) => setEditForm({ ...editForm, videoDescription: e.target.value })}
+                                />
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setIsEditSessionOpen(false)}>{t.common.cancel}</Button>
+                            <Button onClick={handleUpdateSession} className="gradient-primary">{t.common.save}</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Attendance Dialog */}
                 <Dialog open={isMarkAttendanceOpen} onOpenChange={setIsMarkAttendanceOpen}>
                     <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 overflow-hidden">
                         <DialogHeader className="p-6 pb-2">
@@ -355,7 +514,7 @@ export default function AdminAttendance() {
                                 </div>
                             ) : (
                                 <div className="text-center py-8">
-                                    <p className="text-muted-foreground">{t.adminAttendance.noBatches}</p>
+                                    <p className="text-muted-foreground">{t.adminAttendance.noActiveBatches}</p>
                                 </div>
                             )}
                         </div>

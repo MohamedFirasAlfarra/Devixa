@@ -47,9 +47,12 @@ export default function CourseDetailsModal({ course, isOpen, onClose }: CourseDe
                             <Badge className="mb-2 bg-white/20 hover:bg-white/30 text-white border-white/40 backdrop-blur-md">
                                 {course.total_hours} {t.common.hours}
                             </Badge>
-                            <h2 className="text-2xl md:text-3xl font-bold text-white drop-shadow-md">
+                            <DialogTitle className="text-2xl md:text-3xl font-bold text-white drop-shadow-md">
                                 {course.title}
-                            </h2>
+                            </DialogTitle>
+                            <DialogDescription className="sr-only">
+                                {course.description || "Course details and information"}
+                            </DialogDescription>
                         </div>
                     </div>
 

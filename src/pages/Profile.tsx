@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { User, Mail, Calendar, Save, Lock } from "lucide-react";
+import { User, Mail, Calendar, Save, Lock, Award, CheckCircle2, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 export default function Profile() {
     const { user, profile, refreshProfile, isAdmin } = useAuth();
@@ -18,6 +19,42 @@ export default function Profile() {
     const navigate = useNavigate();
     const [fullName, setFullName] = useState(profile?.full_name || "");
     const [saving, setSaving] = useState(false);
+    const [examAttempts, setExamAttempts] = useState<any[]>([]);
+    const [loadingExams, setLoadingExams] = useState(true);
+
+    useEffect(() => {
+        if (user) {
+            fetchExamAttempts();
+        }
+    }, [user]);
+
+    const fetchExamAttempts = async () => {
+        try {
+            const { data, error } = await supabase
+                .from("quiz_attempts")
+                .select(`
+                    id,
+                    score,
+                    passed,
+                    created_at,
+                    course_quizzes (
+                        title,
+                        courses (
+                            title
+                        )
+                    )
+                `)
+                .eq("user_id", user?.id)
+                .order("created_at", { ascending: false });
+
+            if (error) throw error;
+            setExamAttempts(data || []);
+        } catch (error) {
+            console.error("Error fetching exam attempts:", error);
+        } finally {
+            setLoadingExams(false);
+        }
+    };
 
     const handleSaveProfile = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -158,6 +195,65 @@ export default function Profile() {
                             <Lock className="w-4 h-4 me-2" />
                             {t.profile.changePassword}
                         </Button>
+                    </CardContent>
+                </Card>
+
+                {/* My Exams History */}
+                <Card className="rounded-[2rem] overflow-hidden border-accent/10 shadow-lg">
+                    <CardHeader className="bg-primary/5 border-b">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                                <Award className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <CardTitle className="text-xl font-black">{t.nav.exams}</CardTitle>
+                                <CardDescription>{t.adminExams.subtitle}</CardDescription>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        {loadingExams ? (
+                            <div className="p-12 text-center text-muted-foreground animate-pulse">
+                                {t.common.loading}...
+                            </div>
+                        ) : examAttempts.length === 0 ? (
+                            <div className="p-12 text-center text-muted-foreground">
+                                <p className="font-medium">{t.adminExams.noExam}</p>
+                            </div>
+                        ) : (
+                            <div className="divide-y divide-accent/5">
+                                {examAttempts.map((attempt) => (
+                                    <div key={attempt.id} className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-muted/30 transition-colors">
+                                        <div className="space-y-1">
+                                            <h4 className="font-black text-lg">
+                                                {attempt.course_quizzes?.courses?.title || attempt.course_quizzes?.title}
+                                            </h4>
+                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                <Calendar className="w-4 h-4" />
+                                                {new Date(attempt.created_at).toLocaleDateString()}
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-6">
+                                            <div className="text-right">
+                                                <div className="text-2xl font-black text-primary">
+                                                    {attempt.score}%
+                                                </div>
+                                                <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                                                    {t.exam.score.split(':')[0]}
+                                                </div>
+                                            </div>
+                                            <div className={`flex items-center gap-2 px-4 py-2 rounded-full font-black text-sm ${attempt.passed
+                                                    ? "bg-success/10 text-success"
+                                                    : "bg-destructive/10 text-destructive"
+                                                }`}>
+                                                {attempt.passed ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                                                {attempt.passed ? t.exam.passed : t.exam.failed}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </div>

@@ -13,6 +13,7 @@ import {
   Home,
   LogOut,
   Menu,
+  Award,
   Star,
   Users,
   X,
@@ -58,6 +59,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { icon: Calendar, label: t.nav.attendance, path: "/admin/attendance" },
     { icon: Tag, label: t.nav.offers, path: "/admin/offers" },
     { icon: Bell, label: t.nav.notifications, path: "/admin/notifications" },
+    { icon: Award, label: t.nav.exams, path: "/admin/exams" },
     { icon: BarChart3, label: t.nav.statistics, path: "/admin/stats" },
   ];
 

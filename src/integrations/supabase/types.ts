@@ -141,6 +141,7 @@ export type Database = {
           id: string
           passing_score: number
           reward_points: number
+          time_limit: number
           title: string
           updated_at: string
         }
@@ -150,6 +151,7 @@ export type Database = {
           id?: string
           passing_score?: number
           reward_points?: number
+          time_limit?: number
           title: string
           updated_at?: string
         }
@@ -159,6 +161,7 @@ export type Database = {
           id?: string
           passing_score?: number
           reward_points?: number
+          time_limit?: number
           title?: string
           updated_at?: string
         }
@@ -181,6 +184,8 @@ export type Database = {
           session_date: string | null
           session_type: string | null
           title: string
+          video_description: string | null
+          video_url: string | null
         }
         Insert: {
           batch_id: string
@@ -190,6 +195,8 @@ export type Database = {
           session_date?: string | null
           session_type?: string | null
           title: string
+          video_description?: string | null
+          video_url?: string | null
         }
         Update: {
           batch_id?: string
@@ -199,6 +206,8 @@ export type Database = {
           session_date?: string | null
           session_type?: string | null
           title?: string
+          video_description?: string | null
+          video_url?: string | null
         }
         Relationships: [
           {
