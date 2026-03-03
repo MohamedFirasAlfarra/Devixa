@@ -131,6 +131,11 @@ const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({ videoUrl, title, 
                         disablePictureInPicture
                         onContextMenu={(e) => e.preventDefault()}
                         onLoadedData={() => setIsLoading(false)}
+                        onError={(e) => {
+                            console.error("Video playback error:", e);
+                            setError("Error playing video. Please check your connection or file format.");
+                            setIsLoading(false);
+                        }}
                         autoPlay={false}
                     />
                 ) : (
@@ -140,6 +145,10 @@ const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({ videoUrl, title, 
                         allowFullScreen
                         allow="autoplay; encrypted-media"
                         onLoad={() => setIsLoading(false)}
+                        onError={() => {
+                            setError("Error loading iframe. Access might be restricted.");
+                            setIsLoading(false);
+                        }}
                     ></iframe>
                 )}
             </div>

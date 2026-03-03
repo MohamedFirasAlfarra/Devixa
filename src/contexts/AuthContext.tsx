@@ -73,7 +73,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error("Auth initialization error:", error.message);
+        // If we have a refresh token error, sign out to clear local storage
+        if (error.message.includes("Refresh Token")) {
+          supabase.auth.signOut();
+        }
+      }
+
       setSession(session);
       setUser(session?.user ?? null);
 

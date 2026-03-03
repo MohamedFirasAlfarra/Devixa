@@ -20,9 +20,9 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import CommentSection from "@/components/courses/CommentSection";
+import CourseCheckoutModal from "@/components/courses/CourseCheckoutModal";
 import CountdownTimer from "@/components/common/CountdownTimer";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -43,7 +43,6 @@ export default function CourseDetails() {
     const [loading, setLoading] = useState(true);
     const [enrolling, setEnrolling] = useState(false);
     const [paymentModalOpen, setPaymentModalOpen] = useState(false);
-    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("shamiCash");
 
     useEffect(() => {
         if (id) {
@@ -83,45 +82,9 @@ export default function CourseDetails() {
         }
     };
 
-    const handleEnroll = async (paymentMethod: string) => {
-        if (!user || !course) return;
-
-        setEnrolling(true);
-        try {
-            const { data: batches } = await supabase
-                .from("batches")
-                .select("*")
-                .eq("course_id", course.id)
-                .eq("is_active", true)
-                .order("created_at", { ascending: false })
-                .limit(1);
-
-            const batchId = batches?.[0]?.id || null;
-
-            const { error: enrollError } = await supabase.from("enrollments").insert({
-                user_id: user.id,
-                course_id: course.id,
-                batch_id: batchId,
-                payment_method: paymentMethod,
-            });
-
-            if (enrollError) throw enrollError;
-
-            toast({
-                title: t.courses.enrollSuccess,
-                description: t.courses.enrollSuccessDesc.replace("{course}", course.title),
-            });
-
-            setPaymentModalOpen(false);
-        } catch (error: any) {
-            toast({
-                title: t.courses.enrollFailed,
-                description: error.message || "An error occurred",
-                variant: "destructive",
-            });
-        } finally {
-            setEnrolling(false);
-        }
+    const handleEnrollmentSuccess = () => {
+        // Don't close the modal here, let the user see the success animation
+        // and close it manually using the "Close & Return" button.
     };
 
     if (loading) {
@@ -291,55 +254,13 @@ export default function CourseDetails() {
             </div>
 
             {/* Payment Selection Modal */}
-            <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
-                <DialogContent className="sm:max-w-md rounded-[2rem]">
-                    <DialogHeader>
-                        <DialogTitle className="text-2xl font-display font-black">{t.courses.selectPaymentMethod}</DialogTitle>
-                        <DialogDescription className="text-lg">
-                            {course.title}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="py-6">
-                        <RadioGroup
-                            defaultValue="shamiCash"
-                            onValueChange={setSelectedPaymentMethod}
-                            className="grid gap-4"
-                        >
-                            <PaymentMethodItem
-                                id="shamiCash"
-                                icon={Wallet}
-                                label={t.courses.paymentMethods.shamiCash}
-                            />
-                            <PaymentMethodItem
-                                id="syriatelCash"
-                                icon={CreditCard}
-                                label={t.courses.paymentMethods.syriatelCash}
-                            />
-                            <PaymentMethodItem
-                                id="alHaram"
-                                icon={Send}
-                                label={t.courses.paymentMethods.alHaram}
-                            />
-                        </RadioGroup>
-                    </div>
-                    <DialogFooter className="gap-3">
-                        <Button
-                            variant="outline"
-                            onClick={() => setPaymentModalOpen(false)}
-                            className="rounded-xl h-12 px-6"
-                        >
-                            {t.common.cancel}
-                        </Button>
-                        <Button
-                            onClick={() => handleEnroll(selectedPaymentMethod)}
-                            disabled={enrolling}
-                            className="gradient-primary rounded-xl h-12 px-8 font-bold"
-                        >
-                            {enrolling ? <Loader2 className="animate-spin" /> : t.courses.enroll}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <CourseCheckoutModal
+                isOpen={paymentModalOpen}
+                onClose={() => setPaymentModalOpen(false)}
+                courseId={course.id}
+                courseTitle={course.title}
+                onSuccess={handleEnrollmentSuccess}
+            />
         </DashboardLayout>
     );
 }
@@ -351,23 +272,6 @@ function BenefitItem({ icon: Icon, text }: { icon: any, text: string }) {
                 <Icon className="w-3.5 h-3.5" />
             </div>
             <span>{text}</span>
-        </div>
-    );
-}
-
-function PaymentMethodItem({ id, icon: Icon, label }: { id: string, icon: any, label: string }) {
-    return (
-        <div className="flex items-center space-x-3 space-x-reverse border-2 p-5 rounded-2xl hover:bg-muted/50 hover:border-primary/30 transition-all cursor-pointer group">
-            <RadioGroupItem value={id} id={id} className="w-5 h-5" />
-            <Label
-                htmlFor={id}
-                className="flex flex-1 items-center gap-4 cursor-pointer"
-            >
-                <div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                    <Icon className="w-6 h-6" />
-                </div>
-                <span className="font-bold text-lg">{label}</span>
-            </Label>
         </div>
     );
 }

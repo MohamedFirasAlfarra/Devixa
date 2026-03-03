@@ -461,6 +461,87 @@ export type Database = {
           },
         ]
       }
+      enrollment_requests: {
+        Row: {
+          id: string
+          user_id: string
+          course_id: string
+          payment_method: string
+          receipt_image_url: string
+          status: "pending" | "approved" | "rejected"
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          course_id: string
+          payment_method: string
+          receipt_image_url: string
+          status?: "pending" | "approved" | "rejected"
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          course_id?: string
+          payment_method?: string
+          receipt_image_url?: string
+          status?: "pending" | "approved" | "rejected"
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enrollment_requests_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollment_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_settings: {
+        Row: {
+          id: string
+          method_name: string
+          is_enabled: boolean
+          admin_full_name: string | null
+          admin_phone_number: string | null
+          governorate: string | null
+          qr_image_url: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          method_name: string
+          is_enabled?: boolean
+          admin_full_name?: string | null
+          admin_phone_number?: string | null
+          governorate?: string | null
+          qr_image_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          method_name?: string
+          is_enabled?: boolean
+          admin_full_name?: string | null
+          admin_phone_number?: string | null
+          governorate?: string | null
+          qr_image_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       offers: {
         Row: {
           course_id: string

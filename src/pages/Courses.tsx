@@ -19,6 +19,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import CourseDetailsModal from "@/components/courses/CourseDetailsModal";
+import CourseCheckoutModal from "@/components/courses/CourseCheckoutModal";
 
 interface Course {
   id: string;
@@ -116,53 +117,9 @@ export default function Courses() {
     setPaymentModalOpen(true);
   };
 
-  const handleEnroll = async (course: Course, paymentMethod?: string) => {
-    if (!user) return;
-
-    setEnrolling(course.id);
-
-    try {
-      const { data: batches } = await supabase
-        .from("batches")
-        .select("*")
-        .eq("course_id", course.id)
-        .eq("is_active", true)
-        .order("created_at", { ascending: false })
-        .limit(1);
-
-      const batchId = batches?.[0]?.id || null;
-
-      const { error: enrollError } = await supabase.from("enrollments").insert({
-        user_id: user.id,
-        course_id: course.id,
-        batch_id: batchId,
-        payment_method: paymentMethod || "cash",
-      });
-
-      if (enrollError) throw enrollError;
-
-      toast({
-        title: t.courses.enrollSuccess,
-        description: t.courses.enrollSuccessDesc.replace("{course}", course.title),
-      });
-
-      const { data: enrollmentData } = await supabase
-        .from("enrollments")
-        .select("course_id")
-        .eq("user_id", user.id);
-
-      if (enrollmentData) {
-        setEnrollments(enrollmentData);
-      }
-    } catch (error: any) {
-      toast({
-        title: t.courses.enrollFailed,
-        description: error.message || "An error occurred",
-        variant: "destructive",
-      });
-    } finally {
-      setEnrolling(null);
-    }
+  const handleEnrollmentSuccess = () => {
+    // Refresh enrollments after successful request submission
+    fetchData();
   };
 
   if (loading) {
@@ -332,88 +289,13 @@ export default function Courses() {
         onClose={() => setIsModalOpen(false)}
       />
 
-      {/* Payment Selection Modal */}
-      <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t.courses.selectPaymentMethod}</DialogTitle>
-            <DialogDescription>
-              {selectedCourse?.title}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <RadioGroup
-              defaultValue="shamiCash"
-              onValueChange={setSelectedPaymentMethod}
-              className="grid gap-3"
-            >
-              <div className="flex items-center space-x-3 space-x-reverse border p-4 rounded-xl hover:bg-muted/50 transition-colors cursor-pointer group">
-                <RadioGroupItem value="shamiCash" id="shamiCash" />
-                <Label
-                  htmlFor="shamiCash"
-                  className="flex flex-1 items-center gap-3 cursor-pointer justify-between"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                      <Wallet className="w-5 h-5" />
-                    </div>
-                    <span className="font-medium">{t.courses.paymentMethods.shamiCash}</span>
-                  </div>
-                </Label>
-              </div>
-
-              <div className="flex items-center space-x-3 space-x-reverse border p-4 rounded-xl hover:bg-muted/50 transition-colors cursor-pointer group">
-                <RadioGroupItem value="syriatelCash" id="syriatelCash" />
-                <Label
-                  htmlFor="syriatelCash"
-                  className="flex flex-1 items-center gap-3 cursor-pointer justify-between"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                      <CreditCard className="w-5 h-5" />
-                    </div>
-                    <span className="font-medium">{t.courses.paymentMethods.syriatelCash}</span>
-                  </div>
-                </Label>
-              </div>
-
-              <div className="flex items-center space-x-3 space-x-reverse border p-4 rounded-xl hover:bg-muted/50 transition-colors cursor-pointer group">
-                <RadioGroupItem value="alHaram" id="alHaram" />
-                <Label
-                  htmlFor="alHaram"
-                  className="flex flex-1 items-center gap-3 cursor-pointer justify-between"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                      <Send className="w-5 h-5" />
-                    </div>
-                    <span className="font-medium">{t.courses.paymentMethods.alHaram}</span>
-                  </div>
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setPaymentModalOpen(false)}
-            >
-              {t.common.cancel}
-            </Button>
-            <Button
-              onClick={() => {
-                if (selectedCourse) {
-                  handleEnroll(selectedCourse, selectedPaymentMethod || "shamiCash");
-                  setPaymentModalOpen(false);
-                }
-              }}
-              className="gradient-primary"
-            >
-              {t.courses.enroll}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CourseCheckoutModal
+        isOpen={paymentModalOpen}
+        onClose={() => setPaymentModalOpen(false)}
+        courseId={selectedCourse?.id || ""}
+        courseTitle={selectedCourse?.title || ""}
+        onSuccess={handleEnrollmentSuccess}
+      />
     </DashboardLayout>
   );
 }

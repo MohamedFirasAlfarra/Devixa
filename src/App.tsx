@@ -23,6 +23,8 @@ import AdminStats from "./pages/admin/AdminStats";
 import AdminOffers from "./pages/admin/AdminOffers";
 import AdminExams from "./pages/admin/AdminExams";
 import AdminLessons from "./pages/admin/AdminLessons";
+import AdminPaymentSettings from "./pages/admin/AdminPaymentSettings";
+import AdminPayments from "./pages/admin/AdminPayments";
 import Offers from "./pages/Offers";
 import CourseDetails from "./pages/CourseDetails";
 import NotFound from "./pages/NotFound";
@@ -79,6 +81,8 @@ function AppRoutes() {
       <Route path="/admin/exams" element={<ProtectedRoute adminOnly><AdminExams /></ProtectedRoute>} />
       <Route path="/admin/courses/:courseId/lessons" element={<ProtectedRoute adminOnly><AdminLessons /></ProtectedRoute>} />
       <Route path="/admin/stats" element={<ProtectedRoute adminOnly><AdminStats /></ProtectedRoute>} />
+      <Route path="/admin/payment-settings" element={<ProtectedRoute adminOnly><AdminPaymentSettings /></ProtectedRoute>} />
+      <Route path="/admin/payments" element={<ProtectedRoute adminOnly><AdminPayments /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
