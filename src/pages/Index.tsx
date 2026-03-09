@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { ThemeProvider, useTheme } from "@/contexts/ThemeProvider";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { BookOpen, ArrowRight, ArrowLeft, Play, FileText, Sparkles, Award, ChevronRight, Tag } from "lucide-react";
@@ -17,6 +18,9 @@ import type { Tables } from "@/integrations/supabase/types";
 import OfferCard from "@/components/courses/OfferCard";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import ScrollReveal from "@/components/animations/ScrollReveal";
+import AntigravityBackground from "@/components/animations/AntigravityBackground";
+import TechLogoStrip from "@/components/sections/TechLogoStrip";
 
 type Offer = Tables<"offers">;
 type Course = Tables<"courses">;
@@ -24,6 +28,7 @@ type Course = Tables<"courses">;
 export default function Index() {
   const { user } = useAuth();
   const { t, dir, language } = useLanguage();
+  const { theme } = useTheme();
   const [offers, setOffers] = useState<(Offer & { courses: Course })[]>([]);
   const [loadingOffers, setLoadingOffers] = useState(true);
 
@@ -147,6 +152,23 @@ export default function Index() {
 
       {/* ── Hero Slider ── */}
       <section className="relative min-h-[90vh] py-16 flex items-center overflow-hidden bg-background">
+        <AntigravityBackground
+          count={300}
+          magnetRadius={35}
+          ringRadius={14}
+          waveSpeed={0.4}
+          waveAmplitude={3.1}
+          particleSize={2}
+          lerpSpeed={0.01}
+          color={theme === 'dark' ? '#5227FF' : '#5227FF'}
+          autoAnimate
+          particleVariance={0.5}
+          rotationSpeed={0}
+          depthFactor={1}
+          pulseSpeed={3}
+          particleShape="capsule"
+          fieldStrength={10}
+        />
         <Carousel
           setApi={setApi}
           className="w-full h-full pt-20"
@@ -230,13 +252,20 @@ export default function Index() {
         </Carousel>
       </section>
 
+      {/* ── Tech Logo Strip ── */}
+      <TechLogoStrip />
+
       {/* ── Featured Courses ── */}
       <section className="py-24 bg-secondary/10 min-h-screen">
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
             <div className="space-y-4">
-              <h2 className="text-4xl font-display font-bold">{t.landing.featuredCourses}</h2>
-              <p className="text-muted-foreground max-w-md">{t.landing.featuredCoursesDesc}</p>
+              <ScrollReveal baseOpacity={0.1} blurStrength={10}>
+                <h2 className="text-4xl font-display font-bold">{t.landing.featuredCourses}</h2>
+              </ScrollReveal>
+              <ScrollReveal baseOpacity={0.1} blurStrength={5} textClassName="text-lg font-normal text-muted-foreground">
+                {t.landing.featuredCoursesDesc}
+              </ScrollReveal>
             </div>
             <Link to="/courses">
               <Button variant="link" className="text-primary font-bold gap-2 text-lg">
@@ -245,34 +274,36 @@ export default function Index() {
             </Link>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {featuredCourses.map((course, i) => (
-              <div
-                key={i}
-                className="group relative bg-card rounded-3xl overflow-hidden shadow-lg hover-lift hover-glow border border-transparent"
-                style={{ animationDelay: `${i * 100}ms` }}
-              >
-                <div className="h-52 overflow-hidden">
-                  <img src={course.image} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                </div>
-                <div className="p-8 space-y-4">
-                  <div className="text-sm font-bold text-primary uppercase tracking-wider">{course.category}</div>
-                  <h3 className="text-2xl font-display font-bold">{course.title}</h3>
-                  <div className="flex items-center justify-between pt-4">
-                    <Button variant="ghost" className="p-0 h-auto hover:bg-transparent text-muted-foreground group-hover:text-primary transition-colors">
-                      <FileText className="w-4 h-4 me-2" />
-                      {t.landing.getMaterials}
-                    </Button>
-                    <Link to="/courses">
-                      <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
-                        <ChevronRight className={`w-5 h-5 ${dir === "rtl" ? "rotate-180" : ""}`} />
-                      </div>
-                    </Link>
+          <ScrollReveal baseOpacity={0.1} blurStrength={10} containerClassName="w-full">
+            <div className="grid md:grid-cols-3 gap-8">
+              {featuredCourses.map((course, i) => (
+                <div
+                  key={i}
+                  className="group relative bg-card rounded-3xl overflow-hidden shadow-lg hover-lift hover-glow border border-transparent"
+                  style={{ animationDelay: `${i * 100}ms` }}
+                >
+                  <div className="h-52 overflow-hidden">
+                    <img src={course.image} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  </div>
+                  <div className="p-8 space-y-4">
+                    <div className="text-sm font-bold text-primary uppercase tracking-wider">{course.category}</div>
+                    <h3 className="text-2xl font-display font-bold">{course.title}</h3>
+                    <div className="flex items-center justify-between pt-4">
+                      <Button variant="ghost" className="p-0 h-auto hover:bg-transparent text-muted-foreground group-hover:text-primary transition-colors">
+                        <FileText className="w-4 h-4 me-2" />
+                        {t.landing.getMaterials}
+                      </Button>
+                      <Link to="/courses">
+                        <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
+                          <ChevronRight className={`w-5 h-5 ${dir === "rtl" ? "rotate-180" : ""}`} />
+                        </div>
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -281,24 +312,28 @@ export default function Index() {
         <div className="container mx-auto px-6">
           <div className="text-center max-w-2xl mx-auto mb-20 space-y-4">
             <div className="text-primary font-bold tracking-widest uppercase text-sm">{t.landing.features.premiumCourses}</div>
-            <h2 className="text-4xl md:text-5xl font-display font-bold">{t.common.brandName2}</h2>
+            <ScrollReveal baseOpacity={0.1} blurStrength={10}>
+              <h2 className="text-4xl md:text-5xl font-display font-bold">{t.common.brandName2}</h2>
+            </ScrollReveal>
           </div>
-          <div className="grid md:grid-cols-3 gap-12">
-            {features.map((feature, i) => (
-              <div
-                key={i}
-                className="relative p-10 rounded-3xl glass hover-glow transition-all group animate-slide-up"
-                style={{ animationDelay: `${i * 150}ms` }}
-              >
-                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-8 shadow-lg group-hover:rotate-6 transition-transform`}>
-                  <feature.icon className="w-8 h-8 text-white" />
+          <ScrollReveal baseOpacity={0.1} blurStrength={10} containerClassName="w-full">
+            <div className="grid md:grid-cols-3 gap-12">
+              {features.map((feature, i) => (
+                <div
+                  key={i}
+                  className="relative p-10 rounded-3xl glass hover-glow transition-all group"
+                  style={{ animationDelay: `${i * 150}ms` }}
+                >
+                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-8 shadow-lg group-hover:rotate-6 transition-transform`}>
+                    <feature.icon className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-display font-bold mb-4">{feature.title}</h3>
+                  <p className="text-muted-foreground leading-relaxed text-lg">{feature.description}</p>
+                  <div className="absolute top-6 right-6 text-primary/10 font-display font-black text-6xl group-hover:text-primary/20 transition-colors">0{i + 1}</div>
                 </div>
-                <h3 className="text-2xl font-display font-bold mb-4">{feature.title}</h3>
-                <p className="text-muted-foreground leading-relaxed text-lg">{feature.description}</p>
-                <div className="absolute top-6 right-6 text-primary/10 font-display font-black text-6xl group-hover:text-primary/20 transition-colors">0{i + 1}</div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -307,17 +342,19 @@ export default function Index() {
         <div className="absolute inset-0 bg-accent/5 -z-10" />
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 md:mb-16 gap-8">
-            <div className="space-y-4 animate-slide-up">
+            <div className="space-y-4">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent font-bold text-xs md:text-sm uppercase tracking-widest border border-accent/20">
-                <Tag className="w-3 h-3 md:w-4 h-4" />
+                <Tag className="w-3 h-3 md:w-4 md:h-4" />
                 {language === "ar" ? "عروض حصرية" : "Exclusive Offers"}
               </div>
-              <h2 className="text-3xl md:text-5xl lg:text-6xl font-display font-black leading-tight text-foreground">
-                {t.courses.offersTitle}
-              </h2>
-              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl leading-relaxed">
+              <ScrollReveal baseOpacity={0.1} blurStrength={10}>
+                <h2 className="text-3xl md:text-5xl lg:text-6xl font-display font-black leading-tight text-foreground">
+                  {t.courses.offersTitle}
+                </h2>
+              </ScrollReveal>
+              <ScrollReveal baseOpacity={0.1} blurStrength={5} textClassName="text-lg md:text-xl font-normal text-muted-foreground leading-relaxed">
                 {t.courses.offersSubtitle}
-              </p>
+              </ScrollReveal>
             </div>
 
             {!user && (
@@ -329,43 +366,45 @@ export default function Index() {
             )}
           </div>
 
-          {loadingOffers ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-80 rounded-3xl bg-muted/20 animate-pulse border border-border/50" />
-              ))}
-            </div>
-          ) : offers.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-              {offers.map((offer, i) => (
-                <div key={offer.id} className="animate-slide-up" style={{ animationDelay: `${i * 100}ms` }}>
-                  <OfferCard offer={offer} />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="relative rounded-[2rem] md:rounded-[3rem] overflow-hidden gradient-hero p-8 md:p-16 lg:p-24 text-center text-white shadow-2xl">
-              <div className="absolute inset-0 bg-black/20 backdrop-blur-md" />
-              <div className="relative z-10 max-w-3xl mx-auto space-y-6 md:space-y-8">
-                <Sparkles className="w-12 h-12 md:w-16 h-16 mx-auto opacity-80 animate-pulse" />
-                <div className="space-y-3 md:space-y-4">
-                  <h2 className="text-2xl md:text-4xl lg:text-5xl font-display font-black leading-tight">
-                    {t.courses.noOffers}
-                  </h2>
-                  <p className="text-base md:text-lg lg:text-xl text-white/80 max-w-xl mx-auto">
-                    {t.courses.noOffersDesc}
-                  </p>
-                </div>
-                <div className="pt-4">
-                  <Link to="/courses">
-                    <Button size="lg" variant="secondary" className="rounded-full px-8 md:px-12 h-12 md:h-14 lg:h-16 text-base md:text-lg lg:text-xl font-bold shadow-2xl hover:scale-105 transition-transform active:scale-95">
-                      {language === "ar" ? "تصفح جميع الدورات" : "Browse All Courses"}
-                    </Button>
-                  </Link>
+          <ScrollReveal baseOpacity={0.1} blurStrength={10} containerClassName="w-full">
+            {loadingOffers ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-80 rounded-3xl bg-muted/20 animate-pulse border border-border/50" />
+                ))}
+              </div>
+            ) : offers.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                {offers.map((offer, i) => (
+                  <div key={offer.id}>
+                    <OfferCard offer={offer} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="relative rounded-[2rem] md:rounded-[3rem] overflow-hidden gradient-hero p-8 md:p-16 lg:p-24 text-center text-white shadow-2xl">
+                <div className="absolute inset-0 bg-black/20 backdrop-blur-md" />
+                <div className="relative z-10 max-w-3xl mx-auto space-y-6 md:space-y-8">
+                  <Sparkles className="w-12 h-12 md:w-16 md:h-16 mx-auto opacity-80 animate-pulse" />
+                  <div className="space-y-3 md:space-y-4">
+                    <h2 className="text-2xl md:text-4xl lg:text-5xl font-display font-black leading-tight">
+                      {t.courses.noOffers}
+                    </h2>
+                    <p className="text-base md:text-lg lg:text-xl text-white/80 max-w-xl mx-auto">
+                      {t.courses.noOffersDesc}
+                    </p>
+                  </div>
+                  <div className="pt-4">
+                    <Link to="/courses">
+                      <Button size="lg" variant="secondary" className="rounded-full px-8 md:px-12 h-12 md:h-14 lg:h-16 text-base md:text-lg lg:text-xl font-bold shadow-2xl hover:scale-105 transition-transform active:scale-95">
+                        {language === "ar" ? "تصفح جميع الدورات" : "Browse All Courses"}
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </ScrollReveal>
         </div>
       </section>
 
