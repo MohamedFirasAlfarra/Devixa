@@ -30,6 +30,8 @@ interface Course {
   price: number;
   price_syp: number;
   image_url: string | null;
+  level?: string; // e.g., "Beginner", "Intermediate"
+  duration?: number; // duration in months
 }
 
 interface Offer {
@@ -168,9 +170,15 @@ export default function Courses() {
                   key={course.id}
                   className="border-0 shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group"
                 >
+                  {/* Discount Ribbon */}
+                  {offer && (
+                    <div className="ribbon absolute top-2 left-2 bg-primary text-white px-2 py-1 rounded-md text-sm">
+                      {offer.discount_percentage}% {t.courses.off}
+                    </div>
+                  )}
                   {/* Course image placeholder */}
                   <div
-                    className="h-40 gradient-hero flex items-center justify-center cursor-pointer overflow-hidden p-0"
+                    className="h-40 gradient-hero flex items-center justify-center cursor-pointer overflow-hidden p-0 relative"
                     onClick={() => {
                       setSelectedCourse(course);
                       setIsModalOpen(true);
@@ -189,11 +197,15 @@ export default function Courses() {
 
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="text-lg line-clamp-2">
+                      <CardTitle className="text-lg line-clamp-2 font-display font-bold">
                         {course.title}
                       </CardTitle>
+                      {/* Level Badge */}
+                      <Badge className="bg-primary/10 text-primary font-medium px-2 py-1 rounded-full">
+                        {course.level ? course.level : t.courses.levelBeginner}
+                      </Badge>
                       {offer && (
-                        <Badge className="gradient-accent text-accent-foreground shrink-0">
+                        <Badge className="gradient-accent text-white shrink-0">
                           {offer.discount_percentage}% {t.courses.off}
                         </Badge>
                       )}
@@ -213,6 +225,11 @@ export default function Courses() {
                       <div className="flex items-center gap-1">
                         <Users className="w-4 h-4" />
                         {course.sessions_count} {t.common.sessions}
+                      </div>
+                      {/* Duration */}
+                      <div className="flex items-center gap-1">
+                        <Tag className="w-4 h-4" />
+                        {course.duration ? `${course.duration} ${t.courses.months}` : t.courses.durationUnknown}
                       </div>
                     </div>
 
@@ -296,7 +313,7 @@ export default function Courses() {
         courseTitle={selectedCourse?.title || ""}
         onSuccess={handleEnrollmentSuccess}
       />
-    </DashboardLayout>
+    </DashboardLayout >
   );
 }
 
