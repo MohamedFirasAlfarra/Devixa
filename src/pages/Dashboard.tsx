@@ -103,14 +103,14 @@ export default function Dashboard() {
             <h1 className="text-3xl font-display font-bold mb-2 flex items-center gap-2">
               {t.dashboard.welcomeBack}،
               {isAdmin ? (
-                <span className="relative inline-block group">
-                  <span className="absolute -inset-1 bg-accent/20 blur-xl rounded-full animate-pulse transition-all duration-500 group-hover:bg-accent/40 group-hover:blur-2xl" />
-                  <span className="relative bg-clip-text text-transparent bg-gradient-to-r from-accent via-white to-accent bg-[length:200%_auto] animate-shimmer font-[900] drop-shadow-[0_0_15px_rgba(251,191,36,0.6)] tracking-tight">
+                <span className="relative font-black tracking-tighter">
+                  <span className="absolute -inset-1 blur-lg bg-accent/30 rounded-full animate-pulse" />
+                  <span className="relative bg-clip-text text-transparent bg-gradient-to-r from-accent to-amber-500 drop-shadow-[0_0_8px_rgba(251,191,36,0.3)] dark:drop-shadow-[0_0_12px_rgba(251,191,36,0.5)]">
                     Admin!
                   </span>
                 </span>
               ) : (
-                <span>{profile?.full_name?.split(" ")[0] || "Student"}!</span>
+                <span>{profile?.full_name?.split(" ")[0] || user?.user_metadata?.full_name?.split(" ")[0] || "Student"}!</span>
               )}
             </h1>
             <p className="text-muted-foreground">

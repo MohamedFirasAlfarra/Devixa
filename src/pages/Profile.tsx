@@ -17,7 +17,7 @@ export default function Profile() {
     const { t } = useLanguage();
     const { toast } = useToast();
     const navigate = useNavigate();
-    const [fullName, setFullName] = useState(profile?.full_name || "");
+    const [fullName, setFullName] = useState(profile?.full_name || user?.user_metadata?.full_name || "");
     const [saving, setSaving] = useState(false);
     const [examAttempts, setExamAttempts] = useState<any[]>([]);
     const [loadingExams, setLoadingExams] = useState(true);
@@ -127,7 +127,7 @@ export default function Profile() {
                                 </Label>
                                 <Input
                                     id="email"
-                                    value={profile?.email || ""}
+                                    value={profile?.email || user?.email || ""}
                                     disabled
                                     className="bg-muted"
                                 />
@@ -243,8 +243,8 @@ export default function Profile() {
                                                 </div>
                                             </div>
                                             <div className={`flex items-center gap-2 px-4 py-2 rounded-full font-black text-sm ${attempt.passed
-                                                    ? "bg-success/10 text-success"
-                                                    : "bg-destructive/10 text-destructive"
+                                                ? "bg-success/10 text-success"
+                                                : "bg-destructive/10 text-destructive"
                                                 }`}>
                                                 {attempt.passed ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
                                                 {attempt.passed ? t.exam.passed : t.exam.failed}

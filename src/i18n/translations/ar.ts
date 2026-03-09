@@ -132,14 +132,23 @@ export const ar = {
     loginSuccessDesc: "تم تسجيل الدخول بنجاح.",
     accountCreated: "تم إنشاء الحساب!",
     accountCreatedDesc: "مرحباً بك في منصة التعلم.",
+    brandTagline: "رحلتك نحو الإتقان تبدأ هنا",
+    copyright: "جميع الحقوق محفوظة",
+    welcomeTitle: "مرحباً بك في Devixa",
+    welcomeSubtitle: "تعلم البرمجة والتكنولوجيا مع دورات عصرية",
+    continueWithGoogle: "المتابعة باستخدام Google",
+    confirmPassword: "تأكيد كلمة المرور",
     features: {
+      modernCourses: "دورات برمجية حديثة",
+      beginnerToPro: "تعلم من البداية إلى الاحتراف",
+      practicalProjects: "مشاريع عملية حقيقية",
+      affordablePrice: "دورات بأسعار مناسبة",
+      // Keep old ones just in case or replace if safe
       accessCourses: "الوصول إلى الدورات المميزة",
       certifications: "شهادات رسمية",
       expertMentors: "مدربون خبراء",
       joinBatches: "انضم إلى دفعات الطلاب",
     },
-    brandTagline: "رحلتك نحو الإتقان تبدأ هنا",
-    copyright: "جميع الحقوق محفوظة",
   },
 
   // Dashboard
@@ -423,7 +432,6 @@ export const ar = {
     followUs: "تابعنا على",
     contactUs: "تواصل معنا",
     allRightsReserved: "جميع الحقوق محفوظة",
-    madeWith: "صُنع بـ ❤️ في سوريا",
   },
   adminLessons: {
     title: "إدارة الدروس",

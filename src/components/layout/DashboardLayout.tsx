@@ -34,7 +34,7 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { profile, isAdmin, signOut } = useAuth();
+  const { user, profile, isAdmin, signOut } = useAuth();
   const { t, dir } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
@@ -133,12 +133,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="flex items-center gap-3 px-4 py-3 bg-muted rounded-lg mb-3">
               <div className="w-10 h-10 rounded-full overflow-hidden gradient-accent flex items-center justify-center shrink-0">
                 <span className="text-accent-foreground font-bold text-sm">
-                  {profile?.full_name?.charAt(0)?.toUpperCase() || "U"}
+                  {profile?.full_name?.charAt(0)?.toUpperCase() ||
+                    user?.user_metadata?.full_name?.charAt(0)?.toUpperCase() ||
+                    user?.email?.charAt(0).toUpperCase() || "U"}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm truncate">
-                  {profile?.full_name || "User"}
+                  {profile?.full_name || user?.user_metadata?.full_name || "User"}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
                   {profile?.email}

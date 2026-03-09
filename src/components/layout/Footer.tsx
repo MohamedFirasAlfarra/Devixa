@@ -197,7 +197,6 @@ export default function Footer() {
                         </span>
                         . {t.footer.allRightsReserved}.
                     </p>
-                    <p className="flex-1 text-center sm:text-end">{t.footer.madeWith}</p>
                 </div>
             </div>
 

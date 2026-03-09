@@ -129,7 +129,15 @@ export const en = {
     loginSuccessDesc: "You have successfully logged in.",
     accountCreated: "Account created!",
     accountCreatedDesc: "Welcome to the learning platform.",
+    welcomeTitle: "Welcome to Devixa",
+    welcomeSubtitle: "Learn programming and technology with modern courses",
+    continueWithGoogle: "Continue with Google",
+    confirmPassword: "Confirm Password",
     features: {
+      modernCourses: "Modern Programming Courses",
+      beginnerToPro: "Learn From Beginner to Professional",
+      practicalProjects: "Real Practical Projects",
+      affordablePrice: "Affordable Courses",
       accessCourses: "Access premium courses",
       certifications: "Official certifications",
       expertMentors: "Expert mentors",
@@ -380,7 +388,6 @@ export const en = {
     followUs: "Follow Us",
     contactUs: "Contact Us",
     allRightsReserved: "All rights reserved",
-    madeWith: "Made with ❤️ in Syria",
   },
   adminPayments: {
     title: "Payment Approvals",
