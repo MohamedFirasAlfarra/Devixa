@@ -3,7 +3,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, range',
+    'Access-Control-Expose-Headers': 'content-range, content-length, accept-ranges',
 }
 
 serve(async (req) => {
@@ -54,13 +55,14 @@ serve(async (req) => {
             .maybeSingle();
 
         // Check if user is admin if not enrolled
-        const { data: profile } = await supabaseClient
-            .from('profiles')
+        const { data: roleData } = await supabaseClient
+            .from('user_roles')
             .select('role')
-            .eq('id', user.id)
-            .single();
+            .eq('user_id', user.id)
+            .eq('role', 'admin')
+            .maybeSingle();
 
-        const isAdmin = profile?.role === 'admin';
+        const isAdmin = !!roleData;
 
         if (!enrollment && !isAdmin) {
             throw new Error('Access denied: You are not enrolled in this course.');
@@ -83,25 +85,66 @@ serve(async (req) => {
         const filePath = tgData.result.file_path;
         const downloadUrl = `https://api.telegram.org/file/bot${botToken}/${filePath}`;
 
-        // 5. Proxy the visual stream
-        const videoResponse = await fetch(downloadUrl);
+        // 5. Proxy the visual stream with Range support
+        const range = req.headers.get('Range');
+        console.log(`[STREAM] Starting stream for lesson: ${lessonId}`, { range });
 
-        // Return the response as a stream
-        const { readable, writable } = new TransformStream();
-        videoResponse.body?.pipeTo(writable);
+        const fetchOptions: RequestInit = {
+            method: 'GET',
+            redirect: 'follow', // Explicitly follow redirects for Telegram CDNs
+        };
 
-        return new Response(readable, {
-            headers: {
-                ...corsHeaders,
-                'Content-Type': videoResponse.headers.get('Content-Type') || 'video/mp4',
-                'Content-Length': videoResponse.headers.get('Content-Length') || '',
-                'Accept-Ranges': 'bytes',
-            },
+        if (range) {
+            fetchOptions.headers = { 'Range': range };
+        }
+
+        const videoResponse = await fetch(downloadUrl, fetchOptions);
+
+        if (!videoResponse.ok && videoResponse.status !== 206) {
+            const errorText = await videoResponse.text();
+            console.error(`[STREAM] Telegram fetch failed: ${videoResponse.status}`, errorText);
+            throw new Error(`Failed to fetch video from storage: ${videoResponse.status}`);
+        }
+
+        // Prepare response headers
+        const responseHeaders = new Headers(corsHeaders);
+
+        // Force video/mp4 if Telegram doesn't provide a specific video type
+        const tgContentType = videoResponse.headers.get('Content-Type');
+        const contentType = (tgContentType && tgContentType.startsWith('video/')) ? tgContentType : 'video/mp4';
+
+        const contentLength = videoResponse.headers.get('Content-Length');
+        const contentRange = videoResponse.headers.get('Content-Range');
+
+        responseHeaders.set('Content-Type', contentType);
+        responseHeaders.set('Accept-Ranges', 'bytes');
+        responseHeaders.set('Content-Disposition', 'inline');
+
+        if (contentLength) responseHeaders.set('Content-Length', contentLength);
+        if (contentRange) responseHeaders.set('Content-Range', contentRange);
+
+        console.log(`[STREAM] Proxying response: ${videoResponse.status}`, {
+            contentType,
+            contentRange,
+            contentLength
+        });
+
+        return new Response(videoResponse.body, {
+            status: videoResponse.status,
+            headers: responseHeaders,
         });
 
     } catch (error: any) {
+        console.error(`[ERROR] ${error.message}`);
+
+        let status = 400;
+        if (error.message.includes('Unauthorized')) status = 401;
+        if (error.message.includes('Access denied')) status = 403;
+        if (error.message.includes('not found')) status = 404;
+        if (error.message.includes('Telegram error')) status = 502; // Bad Gateway from Telegram
+
         return new Response(JSON.stringify({ error: error.message }), {
-            status: 400,
+            status,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
     }

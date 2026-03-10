@@ -115,7 +115,8 @@ export default function LectureView() {
                 const { data: { session: authSession } } = await supabase.auth.getSession();
                 const token = authSession?.access_token;
                 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-                const streamUrl = `${supabaseUrl}/functions/v1/video-stream?lessonId=${sessionId}&token=${token}`;
+                const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+                const streamUrl = `${supabaseUrl}/functions/v1/video-stream?lessonId=${sessionId}&token=${encodeURIComponent(token || '')}&apikey=${supabaseAnonKey}`;
                 setSignedUrl(streamUrl);
             } else if (sessionData.video_path) {
                 const { data: signedData } = await supabase.storage

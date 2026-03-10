@@ -168,14 +168,18 @@ export default function AdminLessons() {
         const fileExt = file.name.split('.').pop();
         const fileName = `${courseId}/${Date.now()}.${fileExt}`;
 
-        const { error: uploadError, data } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
             .from('course-videos')
             .upload(fileName, file, {
                 cacheControl: '3600',
-                upsert: false
+                upsert: false,
+                contentType: file.type || 'video/mp4'
             });
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+            console.error("Upload error details:", uploadError);
+            throw uploadError;
+        }
         return fileName; // video_path
     };
 
@@ -515,7 +519,7 @@ export default function AdminLessons() {
                                                 {selectedFile ? selectedFile.name : (dir === 'rtl' ? "اضغط هنا لرفع الفيديو" : "Click to upload video")}
                                             </p>
                                             <p className="text-[10px] text-muted-foreground mt-2 uppercase tracking-widest font-black opacity-50">
-                                                MP4, WEBM, M4V (MAX 2GB)
+                                                MP4, WEBM (MAX 50MB - {dir === 'rtl' ? "الخطة المجانية" : "Free Tier"})
                                             </p>
                                         </Label>
                                     </div>
@@ -528,10 +532,15 @@ export default function AdminLessons() {
                                     <Input
                                         value={formData.video_url}
                                         onChange={e => setFormData({ ...formData, video_url: e.target.value })}
-                                        placeholder="https://example.com/video.mp4"
+                                        placeholder="https://youtube.com/watch?v=... / vimeo.com/... / *.mp4"
                                         className="h-12 rounded-xl"
                                         required={sourceType === 'url'}
                                     />
+                                    <p className="text-[10px] text-muted-foreground opacity-60">
+                                        {dir === 'rtl'
+                                            ? "يدعم روابط YouTube أو Vimeo العادية، بالإضافة للروابط المباشرة (.mp4)"
+                                            : "Supports standard YouTube/Vimeo links or direct .mp4 URLs"}
+                                    </p>
                                 </div>
                             )}
                         </div>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Loader2, ShieldAlert, Monitor } from "lucide-react";
 
 interface SecureVideoPlayerProps {
@@ -10,12 +11,46 @@ interface SecureVideoPlayerProps {
 
 const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({ videoUrl, title, onCompleted }) => {
     const { user, profile } = useAuth();
+    const { dir } = useLanguage();
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isCheckingUrl, setIsCheckingUrl] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
     // Dynamic Watermark state
     const [watermarkPos, setWatermarkPos] = useState({ top: "10%", left: "10%" });
+
+    useEffect(() => {
+        // Only check video-stream URLs for detailed errors
+        if (!videoUrl || !videoUrl.includes("video-stream")) return;
+
+        const checkUrl = async () => {
+            setIsCheckingUrl(true);
+            try {
+                // We use a small range request to check if the server returns a video or an error JSON
+                const response = await fetch(videoUrl, {
+                    method: 'GET',
+                    headers: { 'Range': 'bytes=0-1' }
+                });
+
+                if (!response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const data = await response.json();
+                        setError(`Server Error: ${data.error || "Unknown stream error"}`);
+                    } else {
+                        setError(`HTTP Error ${response.status}: Failed to load stream.`);
+                    }
+                }
+            } catch (err) {
+                console.error("Link check failed:", err);
+            } finally {
+                setIsCheckingUrl(false);
+            }
+        };
+
+        checkUrl();
+    }, [videoUrl]);
 
     useEffect(() => {
         // Move watermark periodically to prevent static removal/masking
@@ -59,9 +94,28 @@ const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({ videoUrl, title, 
     const getSecureEmbedUrl = (url: string) => {
         if (!url) return "";
         let finalUrl = url;
+
+        // Telegram Support
         if (url.includes("t.me") && !url.includes("?embed=1")) {
             finalUrl = `${url}?embed=1`;
+            return finalUrl;
         }
+
+        // YouTube Support (matches youtube.com/watch?v=, youtu.be/, youtube.com/embed/)
+        const ytMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+        if (ytMatch && ytMatch[1]) {
+            // Adds modestbranding and rel=0 to hide related videos at the end
+            finalUrl = `https://www.youtube.com/embed/${ytMatch[1]}?modestbranding=1&rel=0`;
+            return finalUrl;
+        }
+
+        // Vimeo Support
+        const vimeoMatch = url.match(/(?:vimeo\.com\/)(\d+)/i);
+        if (vimeoMatch && vimeoMatch[1]) {
+            finalUrl = `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+            return finalUrl;
+        }
+
         return finalUrl;
     };
 
@@ -89,9 +143,14 @@ const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({ videoUrl, title, 
             onContextMenu={(e) => e.preventDefault()}
         >
             {/* Loading Overlay */}
-            {isLoading && (
+            {(isLoading || isCheckingUrl) && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80">
-                    <Loader2 className="w-10 h-10 animate-spin text-accent" />
+                    <div className="flex flex-col items-center gap-2">
+                        <Loader2 className="w-10 h-10 animate-spin text-accent" />
+                        <p className="text-white text-xs font-bold animate-pulse">
+                            {dir === 'rtl' ? "جاري التحقق من الرابط..." : "Checking Stream..."}
+                        </p>
+                    </div>
                 </div>
             )}
 
@@ -132,8 +191,15 @@ const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({ videoUrl, title, 
                         onContextMenu={(e) => e.preventDefault()}
                         onLoadedData={() => setIsLoading(false)}
                         onError={(e) => {
-                            console.error("Video playback error:", e);
-                            setError("Error playing video. Please check your connection or file format.");
+                            const videoElement = e.currentTarget;
+                            const videoError = videoElement.error;
+                            console.error("Video playback error details:", {
+                                code: videoError?.code,
+                                message: videoError?.message,
+                                src: videoElement.src,
+                                event: e
+                            });
+                            setError(`خطأ في تشغيل الفيديو (Error Code: ${videoError?.code || 'Unknown'}). يرجى التأكد من اتصالك بالإنترنت.`);
                             setIsLoading(false);
                         }}
                         autoPlay={false}
