@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeProvider";
@@ -260,12 +261,23 @@ export default function Index() {
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
             <div className="space-y-4">
-              <ScrollReveal baseOpacity={0.1} blurStrength={10}>
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+              >
                 <h2 className="text-4xl font-display font-bold">{t.landing.featuredCourses}</h2>
-              </ScrollReveal>
-              <ScrollReveal baseOpacity={0.1} blurStrength={5} textClassName="text-lg font-normal text-muted-foreground">
+              </motion.div>
+              <motion.p
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+                className="text-lg font-normal text-muted-foreground"
+              >
                 {t.landing.featuredCoursesDesc}
-              </ScrollReveal>
+              </motion.p>
             </div>
             <Link to="/courses">
               <Button variant="link" className="text-primary font-bold gap-2 text-lg">
@@ -274,14 +286,16 @@ export default function Index() {
             </Link>
           </div>
 
-          <ScrollReveal baseOpacity={0.1} blurStrength={10} containerClassName="w-full">
-            <div className="grid md:grid-cols-3 gap-8">
-              {featuredCourses.map((course, i) => (
-                <div
-                  key={i}
-                  className="group relative bg-card rounded-3xl overflow-hidden shadow-lg hover-lift hover-glow border border-transparent"
-                  style={{ animationDelay: `${i * 100}ms` }}
-                >
+          <div className="grid md:grid-cols-3 gap-8">
+            {featuredCourses.map((course, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 50, rotateX: 15 }}
+                whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.7, delay: i * 0.15, ease: "circOut" }}
+                className="group relative bg-card rounded-3xl overflow-hidden shadow-lg hover-lift hover-glow border border-transparent"
+              >
                   <div className="h-52 overflow-hidden">
                     <img src={course.image} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                   </div>
@@ -300,10 +314,9 @@ export default function Index() {
                       </Link>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
-          </ScrollReveal>
         </div>
       </section>
 
@@ -311,29 +324,43 @@ export default function Index() {
       <section className="py-32 relative overflow-hidden">
         <div className="container mx-auto px-6">
           <div className="text-center max-w-2xl mx-auto mb-20 space-y-4">
-            <div className="text-primary font-bold tracking-widest uppercase text-sm">{t.landing.features.premiumCourses}</div>
-            <ScrollReveal baseOpacity={0.1} blurStrength={10}>
-              <h2 className="text-4xl md:text-5xl font-display font-bold">{t.common.brandName2}</h2>
-            </ScrollReveal>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="text-primary font-bold tracking-widest uppercase text-sm"
+            >
+              {t.landing.features.premiumCourses}
+            </motion.div>
+            <motion.h2 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="text-4xl md:text-5xl font-display font-bold"
+            >
+              {t.common.brandName2}
+            </motion.h2>
           </div>
-          <ScrollReveal baseOpacity={0.1} blurStrength={10} containerClassName="w-full">
-            <div className="grid md:grid-cols-3 gap-12">
-              {features.map((feature, i) => (
-                <div
-                  key={i}
-                  className="relative p-10 rounded-3xl glass hover-glow transition-all group"
-                  style={{ animationDelay: `${i * 150}ms` }}
-                >
+          <div className="grid md:grid-cols-3 gap-12">
+            {features.map((feature, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, scale: 0.8, y: 30 }}
+                whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.2, ease: "backOut" }}
+                className="relative p-10 rounded-3xl glass hover-glow transition-all group"
+              >
                   <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-8 shadow-lg group-hover:rotate-6 transition-transform`}>
                     <feature.icon className="w-8 h-8 text-white" />
                   </div>
                   <h3 className="text-2xl font-display font-bold mb-4">{feature.title}</h3>
                   <p className="text-muted-foreground leading-relaxed text-lg">{feature.description}</p>
                   <div className="absolute top-6 right-6 text-primary/10 font-display font-black text-6xl group-hover:text-primary/20 transition-colors">0{i + 1}</div>
-                </div>
-              ))}
-            </div>
-          </ScrollReveal>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -347,14 +374,24 @@ export default function Index() {
                 <Tag className="w-3 h-3 md:w-4 md:h-4" />
                 {language === "ar" ? "عروض حصرية" : "Exclusive Offers"}
               </div>
-              <ScrollReveal baseOpacity={0.1} blurStrength={10}>
-                <h2 className="text-3xl md:text-5xl lg:text-6xl font-display font-black leading-tight text-foreground">
-                  {t.courses.offersTitle}
-                </h2>
-              </ScrollReveal>
-              <ScrollReveal baseOpacity={0.1} blurStrength={5} textClassName="text-lg md:text-xl font-normal text-muted-foreground leading-relaxed">
+              <motion.h2 
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
+                className="text-3xl md:text-5xl lg:text-6xl font-display font-black leading-tight text-foreground"
+              >
+                {t.courses.offersTitle}
+              </motion.h2>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="text-lg md:text-xl font-normal text-muted-foreground leading-relaxed"
+              >
                 {t.courses.offersSubtitle}
-              </ScrollReveal>
+              </motion.p>
             </div>
 
             {!user && (
@@ -366,7 +403,13 @@ export default function Index() {
             )}
           </div>
 
-          <ScrollReveal baseOpacity={0.1} blurStrength={10} containerClassName="w-full">
+          <motion.div 
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="w-full"
+          >
             {loadingOffers ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                 {[1, 2, 3].map((i) => (
@@ -404,7 +447,7 @@ export default function Index() {
                 </div>
               </div>
             )}
-          </ScrollReveal>
+          </motion.div>
         </div>
       </section>
 

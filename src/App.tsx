@@ -2,7 +2,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LanguageProvider, useLanguage } from "@/contexts/LanguageContext";
 import { ThemeProvider } from "@/contexts/ThemeProvider";
@@ -32,7 +33,7 @@ import Profile from "./pages/Profile";
 import ChangePassword from "./pages/ChangePassword";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
-
+import PageTransition from "./components/layout/PageTransition";
 
 const queryClient = new QueryClient();
 
@@ -56,35 +57,41 @@ function ProtectedRoute({ children, adminOnly = false }: { children: React.React
 }
 
 function AppRoutes() {
+  const location = useLocation();
+
   return (
-    <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/auth" element={<Auth />} />
-      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/courses" element={<ProtectedRoute><Courses /></ProtectedRoute>} />
-      <Route path="/courses/:id" element={<ProtectedRoute><CourseDetails /></ProtectedRoute>} />
-      <Route path="/offers" element={<ProtectedRoute><Offers /></ProtectedRoute>} />
-      <Route path="/my-courses" element={<ProtectedRoute><MyCourses /></ProtectedRoute>} />
-      <Route path="/lecture/:sessionId" element={<ProtectedRoute><LectureView /></ProtectedRoute>} />
-      <Route path="/quiz/:courseId" element={<ProtectedRoute><Quiz /></ProtectedRoute>} />
-      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-      <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/admin" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
-      <Route path="/admin/courses" element={<ProtectedRoute adminOnly><AdminCourses /></ProtectedRoute>} />
-      <Route path="/admin/notifications" element={<ProtectedRoute adminOnly><AdminNotifications /></ProtectedRoute>} />
-      <Route path="/admin/users" element={<ProtectedRoute adminOnly><AdminUsers /></ProtectedRoute>} />
-      <Route path="/admin/batches" element={<ProtectedRoute adminOnly><AdminBatches /></ProtectedRoute>} />
-      <Route path="/admin/attendance" element={<ProtectedRoute adminOnly><AdminAttendance /></ProtectedRoute>} />
-      <Route path="/admin/offers" element={<ProtectedRoute adminOnly><AdminOffers /></ProtectedRoute>} />
-      <Route path="/admin/exams" element={<ProtectedRoute adminOnly><AdminExams /></ProtectedRoute>} />
-      <Route path="/admin/courses/:courseId/lessons" element={<ProtectedRoute adminOnly><AdminLessons /></ProtectedRoute>} />
-      <Route path="/admin/stats" element={<ProtectedRoute adminOnly><AdminStats /></ProtectedRoute>} />
-      <Route path="/admin/payment-settings" element={<ProtectedRoute adminOnly><AdminPaymentSettings /></ProtectedRoute>} />
-      <Route path="/admin/payments" element={<ProtectedRoute adminOnly><AdminPayments /></ProtectedRoute>} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<PageTransition><Index /></PageTransition>} />
+        <Route path="/auth" element={<PageTransition><Auth /></PageTransition>} />
+        <Route path="/dashboard" element={<ProtectedRoute><PageTransition><Dashboard /></PageTransition></ProtectedRoute>} />
+        <Route path="/courses" element={<ProtectedRoute><PageTransition><Courses /></PageTransition></ProtectedRoute>} />
+        <Route path="/courses/:id" element={<ProtectedRoute><PageTransition><CourseDetails /></PageTransition></ProtectedRoute>} />
+        <Route path="/offers" element={<ProtectedRoute><PageTransition><Offers /></PageTransition></ProtectedRoute>} />
+        <Route path="/my-courses" element={<ProtectedRoute><PageTransition><MyCourses /></PageTransition></ProtectedRoute>} />
+        <Route path="/lecture/:sessionId" element={<ProtectedRoute><PageTransition><LectureView /></PageTransition></ProtectedRoute>} />
+        <Route path="/quiz/:courseId" element={<ProtectedRoute><PageTransition><Quiz /></PageTransition></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><PageTransition><Profile /></PageTransition></ProtectedRoute>} />
+        <Route path="/change-password" element={<ProtectedRoute><PageTransition><ChangePassword /></PageTransition></ProtectedRoute>} />
+        <Route path="/forgot-password" element={<PageTransition><ForgotPassword /></PageTransition>} />
+        <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
+        
+        <Route path="/admin" element={<ProtectedRoute adminOnly><PageTransition><AdminDashboard /></PageTransition></ProtectedRoute>} />
+        <Route path="/admin/courses" element={<ProtectedRoute adminOnly><PageTransition><AdminCourses /></PageTransition></ProtectedRoute>} />
+        <Route path="/admin/notifications" element={<ProtectedRoute adminOnly><PageTransition><AdminNotifications /></PageTransition></ProtectedRoute>} />
+        <Route path="/admin/users" element={<ProtectedRoute adminOnly><PageTransition><AdminUsers /></PageTransition></ProtectedRoute>} />
+        <Route path="/admin/batches" element={<ProtectedRoute adminOnly><PageTransition><AdminBatches /></PageTransition></ProtectedRoute>} />
+        <Route path="/admin/attendance" element={<ProtectedRoute adminOnly><PageTransition><AdminAttendance /></PageTransition></ProtectedRoute>} />
+        <Route path="/admin/offers" element={<ProtectedRoute adminOnly><PageTransition><AdminOffers /></PageTransition></ProtectedRoute>} />
+        <Route path="/admin/exams" element={<ProtectedRoute adminOnly><PageTransition><AdminExams /></PageTransition></ProtectedRoute>} />
+        <Route path="/admin/courses/:courseId/lessons" element={<ProtectedRoute adminOnly><PageTransition><AdminLessons /></PageTransition></ProtectedRoute>} />
+        <Route path="/admin/stats" element={<ProtectedRoute adminOnly><PageTransition><AdminStats /></PageTransition></ProtectedRoute>} />
+        <Route path="/admin/payment-settings" element={<ProtectedRoute adminOnly><PageTransition><AdminPaymentSettings /></PageTransition></ProtectedRoute>} />
+        <Route path="/admin/payments" element={<ProtectedRoute adminOnly><PageTransition><AdminPayments /></PageTransition></ProtectedRoute>} />
+        
+        <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+      </Routes>
+    </AnimatePresence>
   );
 }
 

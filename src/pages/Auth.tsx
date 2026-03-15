@@ -176,9 +176,18 @@ export default function Auth() {
       }
       navigate("/dashboard");
     } catch (error: any) {
+      let errorMessage = error.message;
+
+      // Handle common Supabase auth errors to display bilingual/RTL friendly messages
+      if (errorMessage?.toLowerCase().includes("invalid login credentials")) {
+        errorMessage = language === "ar" ? "البريد الإلكتروني أو كلمة المرور غير صحيحة" : "Invalid email or password";
+      } else if (errorMessage?.toLowerCase().includes("user already registered")) {
+        errorMessage = language === "ar" ? "هذا البريد الإلكتروني مسجل مسبقاً" : "Email already registered";
+      }
+
       toast({
-        title: t.common.error,
-        description: error.message || "An error occurred",
+        title: language === "ar" ? "خطأ" : "Error",
+        description: errorMessage || "An error occurred",
         variant: "destructive",
       });
     } finally {

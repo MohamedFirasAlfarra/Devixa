@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Bell } from "lucide-react";
+import { Bell, Trash2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 interface Notification {
   id: string;
@@ -28,6 +29,7 @@ interface Notification {
 const NotificationsBell = () => {
   const { dir } = useLanguage();
   const { user } = useAuth();
+  const { toast } = useToast();
   const isRTL = dir === "rtl";
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -95,6 +97,52 @@ const NotificationsBell = () => {
     setUnreadCount(0);
   };
 
+  const deleteNotification = async (e: React.MouseEvent, recipientId: string) => {
+    e.stopPropagation();
+    if (!user) return;
+
+    const { error } = await supabase
+      .from("notification_recipients")
+      .delete()
+      .eq("id", recipientId);
+
+    if (error) {
+      toast({
+        title: isRTL ? "خطأ في الحذف" : "Error deleting",
+        description: error.message,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setNotifications(prev => {
+        const remaining = prev.filter(n => n.id !== recipientId);
+        setUnreadCount(remaining.filter(n => !n.is_read).length);
+        return remaining;
+    });
+  };
+
+  const deleteAllNotifications = async () => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from("notification_recipients")
+      .delete()
+      .eq("user_id", user.id);
+
+    if (error) {
+      toast({
+        title: isRTL ? "خطأ في الحذف" : "Error deleting",
+        description: error.message,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setNotifications([]);
+    setUnreadCount(0);
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -134,16 +182,28 @@ const NotificationsBell = () => {
           <h4 className="font-semibold">
             {isRTL ? "التنبيهات" : "Notifications"}
           </h4>
-          {unreadCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={markAllAsRead}
-              className="text-xs h-auto py-1"
-            >
-              {isRTL ? "تحديد الكل كمقروء" : "Mark all read"}
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {unreadCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={markAllAsRead}
+                className="text-xs h-auto py-1 px-2"
+              >
+                {isRTL ? "تحديد الكل كمقروء" : "Mark all read"}
+              </Button>
+            )}
+            {notifications.length > 0 && (
+               <Button
+                variant="ghost"
+                size="sm"
+                onClick={deleteAllNotifications}
+                className="text-xs h-auto py-1 px-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </div>
         <ScrollArea className="h-[300px]">
           {notifications.length === 0 ? (
@@ -176,6 +236,14 @@ const NotificationsBell = () => {
                         {formatDate(notification.created_at)}
                       </span>
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
+                      onClick={(e) => deleteNotification(e, notification.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               ))}

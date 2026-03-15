@@ -63,8 +63,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { icon: Bell, label: t.nav.notifications, path: "/admin/notifications" },
     { icon: Award, label: t.nav.exams, path: "/admin/exams" },
     { icon: BarChart3, label: t.nav.statistics, path: "/admin/stats" },
-    { icon: Wallet, label: "Payment Settings", path: "/admin/payment-settings" },
-    { icon: Banknote, label: "Payment Approvals", path: "/admin/payments" },
+    { icon: Wallet, label: t.adminPaymentSettings?.title || "Payment Settings", path: "/admin/payment-settings" },
+    { icon: Banknote, label: t.adminPayments?.title || "Payment Approvals", path: "/admin/payments" },
   ];
 
   const navItems = isAdmin ? adminNavItems : studentNavItems;

@@ -23,7 +23,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Loader2, CheckCircle, XCircle, Eye, Wallet, FileText, Search, CreditCard, Send, AlertTriangle } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Eye, Wallet, FileText, Search, CreditCard, Send, AlertTriangle, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -49,7 +49,7 @@ export default function AdminPayments() {
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedReceipt, setSelectedReceipt] = useState<string | null>(null);
-    const [confirmAction, setConfirmAction] = useState<{ id: string, type: 'approve' | 'reject' } | null>(null);
+    const [confirmAction, setConfirmAction] = useState<{ id: string, type: 'approve' | 'reject' | 'delete' } | null>(null);
 
     useEffect(() => {
         fetchPayments();
@@ -80,12 +80,15 @@ export default function AdminPayments() {
             if (userIds.length > 0) {
                 const { data: profilesData } = await supabase
                     .from('profiles')
-                    .select('user_id, full_name')
-                    .in('user_id', userIds);
+                    .select('id, user_id, full_name')
+                    .or(`id.in.(${userIds.join(',')}),user_id.in.(${userIds.join(',')})`);
 
                 if (profilesData) {
                     profilesData.forEach(p => {
-                        profilesMap[p.user_id] = p.full_name || 'Unknown User';
+                        profilesMap[p.id] = p.full_name || 'Unknown User';
+                        if (p.user_id) {
+                            profilesMap[p.user_id] = p.full_name || 'Unknown User';
+                        }
                     });
                 }
             }
@@ -114,16 +117,30 @@ export default function AdminPayments() {
 
         setActionLoading(requestId);
         try {
-            const { error } = await supabase.functions.invoke('enrollment-handler', {
-                body: { action, requestId }
-            });
+            if (action === 'delete') {
+                const { error } = await supabase
+                    .from('enrollment_requests')
+                    .delete()
+                    .eq('id', requestId);
+                
+                if (error) throw error;
 
-            if (error) throw error;
+                toast({
+                    title: language === 'ar' ? 'تم الحذف' : 'Deleted',
+                    description: language === 'ar' ? 'تم حذف الطلب بنجاح' : 'Request deleted successfully',
+                });
+            } else {
+                const { error } = await supabase.functions.invoke('enrollment-handler', {
+                    body: { action, requestId }
+                });
 
-            toast({
-                title: action === 'approve' ? (language === 'ar' ? 'تم القبول' : 'Approved') : (language === 'ar' ? 'تم الرفض' : 'Rejected'),
-                description: action === 'approve' ? (language === 'ar' ? 'تم تفعيل حساب الطالب بنجاح' : 'Student enrolled successfully') : (language === 'ar' ? 'تم رفض الطلب' : 'Request rejected'),
-            });
+                if (error) throw error;
+
+                toast({
+                    title: action === 'approve' ? (language === 'ar' ? 'تم القبول' : 'Approved') : (language === 'ar' ? 'تم الرفض' : 'Rejected'),
+                    description: action === 'approve' ? (language === 'ar' ? 'تم تفعيل حساب الطالب بنجاح' : 'Student enrolled successfully') : (language === 'ar' ? 'تم رفض الطلب' : 'Request rejected'),
+                });
+            }
             fetchPayments();
         } catch (error: any) {
             toast({
@@ -234,29 +251,42 @@ export default function AdminPayments() {
                                         <div className="flex items-center gap-4 md:flex-col md:items-end md:justify-center shrink-0">
                                             {getStatusBadge(request.status)}
 
-                                            {request.status === 'pending' && (
-                                                <div className="flex gap-2">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        className="h-8 rounded-lg text-destructive hover:bg-destructive hover:text-white border-destructive/20"
-                                                        onClick={() => setConfirmAction({ id: request.id, type: 'reject' })}
-                                                        disabled={actionLoading === request.id}
-                                                    >
-                                                        {actionLoading === request.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4 sm:mx-1" />}
-                                                        <span className="hidden sm:inline">{t.adminPayments.reject}</span>
-                                                    </Button>
-                                                    <Button
-                                                        size="sm"
-                                                        className="h-8 rounded-lg bg-green-500 hover:bg-green-600 border-none"
-                                                        onClick={() => setConfirmAction({ id: request.id, type: 'approve' })}
-                                                        disabled={actionLoading === request.id}
-                                                    >
-                                                        {actionLoading === request.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4 sm:mx-1" />}
-                                                        <span className="hidden sm:inline">{t.adminPayments.approve}</span>
-                                                    </Button>
-                                                </div>
-                                            )}
+                                            <div className="flex gap-2">
+                                                {request.status === 'pending' && (
+                                                    <>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            className="h-8 rounded-lg text-destructive hover:bg-destructive hover:text-white border-destructive/20"
+                                                            onClick={() => setConfirmAction({ id: request.id, type: 'reject' })}
+                                                            disabled={actionLoading === request.id}
+                                                        >
+                                                            {actionLoading === request.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4 sm:mx-1" />}
+                                                            <span className="hidden sm:inline">{t.adminPayments.reject}</span>
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            className="h-8 rounded-lg bg-green-500 hover:bg-green-600 border-none"
+                                                            onClick={() => setConfirmAction({ id: request.id, type: 'approve' })}
+                                                            disabled={actionLoading === request.id}
+                                                        >
+                                                            {actionLoading === request.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4 sm:mx-1" />}
+                                                            <span className="hidden sm:inline">{t.adminPayments.approve}</span>
+                                                        </Button>
+                                                    </>
+                                                )}
+                                                
+                                                {/* Delete Button for all statuses */}
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="h-8 w-8 p-0 rounded-lg text-destructive hover:bg-destructive hover:text-white border-destructive/20"
+                                                    onClick={() => setConfirmAction({ id: request.id, type: 'delete' })}
+                                                    disabled={actionLoading === request.id}
+                                                >
+                                                    {actionLoading === request.id && confirmAction?.type === 'delete' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                                                </Button>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -306,7 +336,7 @@ export default function AdminPayments() {
                                         >
                                             <CheckCircle className="w-12 h-12" />
                                         </motion.div>
-                                    ) : (
+                                    ) : confirmAction?.type === 'reject' ? (
                                         <motion.div
                                             key="reject-icon"
                                             initial={{ scale: 0.5, rotate: 45, opacity: 0 }}
@@ -316,23 +346,37 @@ export default function AdminPayments() {
                                         >
                                             <AlertTriangle className="w-12 h-12" />
                                         </motion.div>
+                                    ) : (
+                                        <motion.div
+                                            key="delete-icon"
+                                            initial={{ scale: 0.5, rotate: 15, opacity: 0 }}
+                                            animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                                            exit={{ scale: 0.5, opacity: 0 }}
+                                            className="p-4 rounded-full bg-destructive/10 text-destructive"
+                                        >
+                                            <Trash2 className="w-12 h-12" />
+                                        </motion.div>
                                     )}
                                 </AnimatePresence>
                             </div>
 
                             <AlertDialogTitle className="text-2xl font-black text-center">
                                 {language === 'ar'
-                                    ? (confirmAction?.type === 'approve' ? 'تأكيد قبول الطالب' : 'تأكيد رفض الطلب')
-                                    : (confirmAction?.type === 'approve' ? 'Confirm Approval' : 'Confirm Rejection')}
+                                    ? (confirmAction?.type === 'approve' ? 'تأكيد قبول الطالب' : confirmAction?.type === 'reject' ? 'تأكيد رفض الطلب' : 'تأكيد الحذف')
+                                    : (confirmAction?.type === 'approve' ? 'Confirm Approval' : confirmAction?.type === 'reject' ? 'Confirm Rejection' : 'Confirm Deletion')}
                             </AlertDialogTitle>
                             <AlertDialogDescription className="text-center text-lg font-medium text-muted-foreground pt-2">
                                 {language === 'ar'
                                     ? (confirmAction?.type === 'approve'
                                         ? 'هل أنت متأكد من رغبتك في قبول هذا الطالب وتفعيل الكورس له؟ سيتم إشعار الطالب فوراً.'
-                                        : 'هل أنت متأكد من رفض هذا الطلب؟ لن يتمكن الطالب من الوصول للكورس.')
+                                        : confirmAction?.type === 'reject' 
+                                            ? 'هل أنت متأكد من رفض هذا الطلب؟ لن يتمكن الطالب من الوصول للكورس.'
+                                            : 'هل أنت متأكد من مسح هذا الطلب نهائياً من النظام؟ لا يمكن التراجع عن هذه الخطوة.')
                                     : (confirmAction?.type === 'approve'
                                         ? 'Are you sure you want to approve this student and activate the course? They will be notified immediately.'
-                                        : 'Are you sure you want to reject this request? The student will not be able to access the course.')}
+                                        : confirmAction?.type === 'reject'
+                                            ? 'Are you sure you want to reject this request? The student will not be able to access the course.'
+                                            : 'Are you sure you want to permanently delete this request from the system? This action cannot be undone.')}
                             </AlertDialogDescription>
                         </AlertDialogHeader>
 

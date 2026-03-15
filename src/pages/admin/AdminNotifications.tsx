@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Bell, Send, Users, BookOpen, Loader2 } from "lucide-react";
+import { Bell, Send, Users, BookOpen, Loader2, Trash2 } from "lucide-react";
 
 interface Course {
   id: string;
@@ -130,6 +130,23 @@ const AdminNotifications = () => {
         ? prev.filter(id => id !== userId)
         : [...prev, userId]
     );
+  };
+
+  const deleteNotification = async (notificationId: string) => {
+    try {
+      const { error } = await supabase
+        .from("notifications")
+        .delete()
+        .eq("id", notificationId);
+
+      if (error) throw error;
+
+      toast.success(isRTL ? "تم حذف التنبيه بنجاح" : "Notification deleted successfully");
+      setNotifications(prev => prev.filter(n => n.id !== notificationId));
+    } catch (error: any) {
+      console.error("Error deleting notification:", error);
+      toast.error(isRTL ? "فشل الحذف" : "Failed to delete");
+    }
   };
 
   return (
@@ -284,10 +301,22 @@ const AdminNotifications = () => {
                 <div className="space-y-3">
                   {notifications.map((notification) => (
                     <div key={notification.id} className="border rounded-lg p-3">
-                      <h4 className="font-medium">{notification.title}</h4>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {notification.message}
-                      </p>
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <h4 className="font-medium">{notification.title}</h4>
+                          <p className="text-sm text-muted-foreground line-clamp-2">
+                            {notification.message}
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
+                          onClick={() => deleteNotification(notification.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                       <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
                         <span>
                           {notification.target_type === "all" 
