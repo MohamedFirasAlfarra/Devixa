@@ -11,7 +11,20 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Bell, Send, Users, BookOpen, Loader2, Trash2 } from "lucide-react";
+import { Bell, Send, Users, BookOpen, Loader2, Trash2, AlertTriangle, CheckCircle } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
+
 
 interface Course {
   id: string;
@@ -47,6 +60,9 @@ const AdminNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
 
   useEffect(() => {
     fetchData();
@@ -132,20 +148,26 @@ const AdminNotifications = () => {
     );
   };
 
-  const deleteNotification = async (notificationId: string) => {
+  const deleteNotification = async () => {
+    if (!deleteId) return;
+    
+    setIsDeleting(true);
     try {
       const { error } = await supabase
         .from("notifications")
         .delete()
-        .eq("id", notificationId);
+        .eq("id", deleteId);
 
       if (error) throw error;
 
       toast.success(isRTL ? "تم حذف التنبيه بنجاح" : "Notification deleted successfully");
-      setNotifications(prev => prev.filter(n => n.id !== notificationId));
+      setNotifications(prev => prev.filter(n => n.id !== deleteId));
     } catch (error: any) {
       console.error("Error deleting notification:", error);
       toast.error(isRTL ? "فشل الحذف" : "Failed to delete");
+    } finally {
+      setIsDeleting(false);
+      setDeleteId(null);
     }
   };
 
@@ -312,7 +334,8 @@ const AdminNotifications = () => {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
-                          onClick={() => deleteNotification(notification.id)}
+                          onClick={() => setDeleteId(notification.id)}
+
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -336,8 +359,59 @@ const AdminNotifications = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Delete Confirmation Alert Dialog */}
+        <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+          <AlertDialogContent className="rounded-3xl border-none shadow-2xl p-0 overflow-hidden bg-background">
+            <div className="h-2 w-full bg-destructive" />
+            
+            <div className="p-8 space-y-6">
+              <AlertDialogHeader>
+                <div className="flex justify-center mb-4">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key="delete-icon"
+                      initial={{ scale: 0.5, rotate: 15, opacity: 0 }}
+                      animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                      exit={{ scale: 0.5, opacity: 0 }}
+                      className="p-4 rounded-full bg-destructive/10 text-destructive"
+                    >
+                      <Trash2 className="w-12 h-12" />
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+
+                <AlertDialogTitle className="text-2xl font-black text-center">
+                  {isRTL ? 'تأكيد الحذف' : 'Confirm Deletion'}
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-center text-lg font-medium text-muted-foreground pt-2">
+                  {isRTL 
+                    ? 'هل أنت متأكد من حذف هذا التنبيه نهائياً؟ سيتم إزالته من عند جميع المستخدمين.' 
+                    : 'Are you sure you want to permanently delete this notification? It will be removed for all users.'}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+
+              <AlertDialogFooter className="flex-row gap-4 sm:justify-center">
+                <AlertDialogCancel className="flex-1 rounded-2xl h-12 border-2 text-lg font-bold hover:bg-muted transition-all">
+                  {isRTL ? 'تراجع' : 'Cancel'}
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={(e) => {
+                    e.preventDefault();
+                    deleteNotification();
+                  }}
+                  disabled={isDeleting}
+                  className="flex-1 rounded-2xl h-12 text-lg font-bold shadow-lg bg-destructive hover:bg-destructive/90 shadow-destructive/20 transition-all"
+                >
+                  {isDeleting ? <Loader2 className="w-5 h-5 animate-spin" /> : (isRTL ? 'تأكيد الحذف' : 'Confirm Deletion')}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </div>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
+
   );
 };
 

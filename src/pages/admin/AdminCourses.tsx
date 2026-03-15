@@ -35,15 +35,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, BookOpen, Loader2, Upload, X, Clock, Calendar, DollarSign, Layers, CheckCircle2, MoreVertical, PlayCircle } from "lucide-react";
+import { Plus, Pencil, Trash2, BookOpen, Loader2, Upload, X, Clock, Calendar, DollarSign, Layers, CheckCircle2, MoreVertical, PlayCircle, AlertTriangle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+
 import type { Tables } from "@/integrations/supabase/types";
 
 type Course = Tables<"courses">;
@@ -83,7 +85,9 @@ export default function AdminCourses() {
   const [formData, setFormData] = useState<CourseFormData>(defaultFormData);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
+
 
   useEffect(() => {
     fetchCourses();
@@ -253,6 +257,7 @@ export default function AdminCourses() {
   const handleDeleteConfirm = async () => {
     if (!courseToDelete) return;
 
+    setIsDeleting(true);
     try {
       const { error } = await supabase
         .from("courses")
@@ -275,6 +280,7 @@ export default function AdminCourses() {
         variant: "destructive",
       });
     } finally {
+      setIsDeleting(false);
       setDeleteDialogOpen(false);
       setCourseToDelete(null);
     }
@@ -601,24 +607,52 @@ export default function AdminCourses() {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t.adminCourses.deleteCourse}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t.adminCourses.deleteConfirm.replace("{title}", courseToDelete?.title || "")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {t.common.delete}
-            </AlertDialogAction>
-          </AlertDialogFooter>
+        <AlertDialogContent className="rounded-3xl border-none shadow-2xl p-0 overflow-hidden bg-background">
+          <div className="h-2 w-full bg-destructive" />
+          
+          <div className="p-8 space-y-6">
+            <AlertDialogHeader>
+              <div className="flex justify-center mb-4">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key="delete-icon"
+                    initial={{ scale: 0.5, rotate: 15, opacity: 0 }}
+                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                    exit={{ scale: 0.5, opacity: 0 }}
+                    className="p-4 rounded-full bg-destructive/10 text-destructive"
+                  >
+                    <Trash2 className="w-12 h-12" />
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              <AlertDialogTitle className="text-2xl font-black text-center">
+                {t.adminCourses.deleteCourse}
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-center text-lg font-medium text-muted-foreground pt-2">
+                {t.adminCourses.deleteConfirm.replace("{title}", courseToDelete?.title || "")}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <AlertDialogFooter className="flex-row gap-4 sm:justify-center">
+              <AlertDialogCancel className="flex-1 rounded-2xl h-12 border-2 text-lg font-bold hover:bg-muted transition-all">
+                {t.common.cancel}
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleDeleteConfirm();
+                }}
+                disabled={isDeleting}
+                className="flex-1 rounded-2xl h-12 text-lg font-bold shadow-lg bg-destructive hover:bg-destructive/90 shadow-destructive/20 transition-all"
+              >
+                {isDeleting ? <Loader2 className="w-5 h-5 animate-spin" /> : t.common.delete}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </div>
         </AlertDialogContent>
       </AlertDialog>
+
     </DashboardLayout >
   );
 }

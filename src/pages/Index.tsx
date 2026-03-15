@@ -14,6 +14,8 @@ import img2 from "@/assets/images/course-mobile.png";
 import img3 from "@/assets/images/course-UIUX.png";
 import img4 from "@/assets/images/course-ICDL.png";
 import img5 from "@/assets/images/course-cyberSecurity.png";
+import img6 from "@/assets/images/course-SQL-Language.png";
+import img7 from "@/assets/images/course-Linux.png";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import OfferCard from "@/components/courses/OfferCard";
@@ -92,9 +94,23 @@ export default function Index() {
       description: language === "ar" ? "تعلم تقنيات حماية الأنظمة والشبكات، واحتراف القرصنة الأخلاقية والدفاع السيبراني المتقدم." : "Learn system and network protection techniques, master ethical hacking and advanced cyber defense.",
       image: img5,
       gradient: "from-indigo-600/20 to-violet-600/20"
+    },
+    {
+      title: language === "ar" ? "SQL Language Course" : "SQL Language Course",
+      subtitle: language === "ar" ? "التعامل مع قواعد البيانات" : "Working with databases",
+      description: language === "ar" ? "تعلم لغة SQL الخاصة بالتعامل مع قواعد البيانات من المستوى المبتدئ حتى مستوى فوق المتوسط." : "Learn the SQL language for dealing with databases from beginner to upper-intermediate level.",
+      image: img6,
+      gradient: "from-emerald-600/20 to-teal-600/20"
+    },
+    {
+      title: language === "ar" ? "Linux Basics Course" : "Linux Basics Course",
+      subtitle: language === "ar" ? "مستوى متقدم للمبتدئين في عالم الأنظمة وإدارة الخوادم" : "Advanced level for beginners in the world of systems and server management",
+      description: language === "ar" ? "تعلم أساسيات نظام Linux من الصفر حتى مستوى متقدم للمبتدئين في عالم الأنظمة وإدارة الخوادم." : "Learn the basics of Linux from scratch to an advanced level for beginners in the world of systems and server management.",
+      image: img7,
+      gradient: "from-emerald-600/20 to-teal-600/20"
     }
   ];
-
+  
   const features = [
     {
       icon: BookOpen,
@@ -128,16 +144,31 @@ export default function Index() {
       image: img2
     },
     {
-      title: language === "ar" ? "الأمن السيبراني" : "Cyber Securitye",
-      category: language === "ar" ? "مسار البيانات" : "Data Science",
+      title: language === "ar" ? "Linux Basics Course" : "Linux Basics Course",
+      category: language === "ar" ? "مستوى متقدم للمبتدئين في عالم الأنظمة وإدارة الخوادم" : "Advanced level for beginners in the world of systems and server management",
+      image: img7
+    },
+    {
+      title: language === "ar" ? "كورس ICDL كامل" : "Full ICDL Course",
+      category: language === "ar" ? "مسار ICDL" : "ICDL",
+      image: img4
+    },
+    {
+      title: language === "ar" ? "كورس الأمن السيبراني الشامل" : "Comprehensive Cybersecurity",
+      category: language === "ar" ? "لأمن السيبراني" : "Cyber Securitye",
       image: img5
+    },
+    {
+      title: language === "ar" ? "SQL Language Course" : "SQL Language Course",
+      category: language === "ar" ? "التعامل مع قواعد البيانات" : "Working with databases",
+      image: img6
     }
   ];
 
   const [api, setApi] = React.useState<any>();
   const [current, setCurrent] = React.useState(0);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!api) return;
     setCurrent(api.selectedScrollSnap());
     api.on("select", () => {
@@ -147,11 +178,9 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background" dir={dir}>
-
-      {/* ── Navbar ── */}
       <Navbar />
 
-      {/* ── Hero Slider ── */}
+      {/* Hero Slider */}
       <section className="relative min-h-[90vh] py-16 flex items-center overflow-hidden bg-background">
         <AntigravityBackground
           count={300}
@@ -161,7 +190,7 @@ export default function Index() {
           waveAmplitude={3.1}
           particleSize={2}
           lerpSpeed={0.01}
-          color={theme === 'dark' ? '#5227FF' : '#5227FF'}
+          color={'#5227FF'}
           autoAnimate
           particleVariance={0.5}
           rotationSpeed={0}
@@ -253,10 +282,9 @@ export default function Index() {
         </Carousel>
       </section>
 
-      {/* ── Tech Logo Strip ── */}
       <TechLogoStrip />
 
-      {/* ── Featured Courses ── */}
+      {/* Featured Courses */}
       <section className="py-24 bg-secondary/10 min-h-screen">
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
@@ -296,31 +324,31 @@ export default function Index() {
                 transition={{ duration: 0.7, delay: i * 0.15, ease: "circOut" }}
                 className="group relative bg-card rounded-3xl overflow-hidden shadow-lg hover-lift hover-glow border border-transparent"
               >
-                  <div className="h-52 overflow-hidden">
-                    <img src={course.image} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                <div className="h-52 overflow-hidden">
+                  <img src={course.image} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                </div>
+                <div className="p-8 space-y-4">
+                  <div className="text-sm font-bold text-primary uppercase tracking-wider">{course.category}</div>
+                  <h3 className="text-2xl font-display font-bold">{course.title}</h3>
+                  <div className="flex items-center justify-between pt-4">
+                    <Button variant="ghost" className="p-0 h-auto hover:bg-transparent text-muted-foreground group-hover:text-primary transition-colors">
+                      <FileText className="w-4 h-4 me-2" />
+                      {t.landing.getMaterials}
+                    </Button>
+                    <Link to="/courses">
+                      <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
+                        <ChevronRight className={`w-5 h-5 ${dir === "rtl" ? "rotate-180" : ""}`} />
+                      </div>
+                    </Link>
                   </div>
-                  <div className="p-8 space-y-4">
-                    <div className="text-sm font-bold text-primary uppercase tracking-wider">{course.category}</div>
-                    <h3 className="text-2xl font-display font-bold">{course.title}</h3>
-                    <div className="flex items-center justify-between pt-4">
-                      <Button variant="ghost" className="p-0 h-auto hover:bg-transparent text-muted-foreground group-hover:text-primary transition-colors">
-                        <FileText className="w-4 h-4 me-2" />
-                        {t.landing.getMaterials}
-                      </Button>
-                      <Link to="/courses">
-                        <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
-                          <ChevronRight className={`w-5 h-5 ${dir === "rtl" ? "rotate-180" : ""}`} />
-                        </div>
-                      </Link>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ── Features ── */}
+      {/* Features */}
       <section className="py-32 relative overflow-hidden">
         <div className="container mx-auto px-6">
           <div className="text-center max-w-2xl mx-auto mb-20 space-y-4">
@@ -352,19 +380,19 @@ export default function Index() {
                 transition={{ duration: 0.5, delay: i * 0.2, ease: "backOut" }}
                 className="relative p-10 rounded-3xl glass hover-glow transition-all group"
               >
-                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-8 shadow-lg group-hover:rotate-6 transition-transform`}>
-                    <feature.icon className="w-8 h-8 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-display font-bold mb-4">{feature.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed text-lg">{feature.description}</p>
-                  <div className="absolute top-6 right-6 text-primary/10 font-display font-black text-6xl group-hover:text-primary/20 transition-colors">0{i + 1}</div>
+                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-8 shadow-lg group-hover:rotate-6 transition-transform`}>
+                  <feature.icon className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-2xl font-display font-bold mb-4">{feature.title}</h3>
+                <p className="text-muted-foreground leading-relaxed text-lg">{feature.description}</p>
+                <div className="absolute top-6 right-6 text-primary/10 font-display font-black text-6xl group-hover:text-primary/20 transition-colors">0{i + 1}</div>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Special Offers ── */}
+      {/* Special Offers */}
       <section className="py-16 md:py-24 relative overflow-hidden bg-background">
         <div className="absolute inset-0 bg-accent/5 -z-10" />
         <div className="container mx-auto px-6">
@@ -418,7 +446,7 @@ export default function Index() {
               </div>
             ) : offers.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-                {offers.map((offer, i) => (
+                {offers.map((offer) => (
                   <div key={offer.id}>
                     <OfferCard offer={offer} />
                   </div>
@@ -451,9 +479,7 @@ export default function Index() {
         </div>
       </section>
 
-      {/* ── Footer ── */}
       <Footer />
-
     </div>
   );
 }

@@ -12,6 +12,19 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { motion, AnimatePresence } from "framer-motion";
+import { Loader2 } from "lucide-react";
+
 
 interface Notification {
   id: string;
@@ -34,6 +47,11 @@ const NotificationsBell = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
+  const [isDeletingSingle, setIsDeletingSingle] = useState(false);
+  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
+
 
   useEffect(() => {
     if (user) {
@@ -97,14 +115,14 @@ const NotificationsBell = () => {
     setUnreadCount(0);
   };
 
-  const deleteNotification = async (e: React.MouseEvent, recipientId: string) => {
-    e.stopPropagation();
-    if (!user) return;
+  const deleteNotification = async () => {
+    if (!deleteId || !user) return;
 
+    setIsDeletingSingle(true);
     const { error } = await supabase
       .from("notification_recipients")
       .delete()
-      .eq("id", recipientId);
+      .eq("id", deleteId);
 
     if (error) {
       toast({
@@ -112,19 +130,23 @@ const NotificationsBell = () => {
         description: error.message,
         variant: "destructive"
       });
+      setIsDeletingSingle(false);
       return;
     }
 
     setNotifications(prev => {
-        const remaining = prev.filter(n => n.id !== recipientId);
+        const remaining = prev.filter(n => n.id !== deleteId);
         setUnreadCount(remaining.filter(n => !n.is_read).length);
         return remaining;
     });
+    setIsDeletingSingle(false);
+    setDeleteId(null);
   };
 
   const deleteAllNotifications = async () => {
     if (!user) return;
 
+    setIsDeletingAll(true);
     const { error } = await supabase
       .from("notification_recipients")
       .delete()
@@ -136,11 +158,14 @@ const NotificationsBell = () => {
         description: error.message,
         variant: "destructive"
       });
+      setIsDeletingAll(false);
       return;
     }
 
     setNotifications([]);
     setUnreadCount(0);
+    setIsDeletingAll(false);
+    setShowDeleteAllConfirm(false);
   };
 
   const formatDate = (dateString: string) => {
@@ -197,7 +222,8 @@ const NotificationsBell = () => {
                <Button
                 variant="ghost"
                 size="sm"
-                onClick={deleteAllNotifications}
+                onClick={() => setShowDeleteAllConfirm(true)}
+
                 className="text-xs h-auto py-1 px-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
               >
                 <Trash2 className="w-4 h-4" />
@@ -240,7 +266,10 @@ const NotificationsBell = () => {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
-                      onClick={(e) => deleteNotification(e, notification.id)}
+                       onClick={(e) => {
+                         e.stopPropagation();
+                         setDeleteId(notification.id);
+                       }}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -251,7 +280,102 @@ const NotificationsBell = () => {
           )}
         </ScrollArea>
       </PopoverContent>
+
+      {/* Delete Single Notification Confirmation */}
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+        <AlertDialogContent className="rounded-3xl border-none shadow-2xl p-0 overflow-hidden bg-background">
+          <div className="h-2 w-full bg-destructive" />
+          <div className="p-6 space-y-4">
+            <AlertDialogHeader>
+              <div className="flex justify-center mb-2">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key="delete-icon"
+                    initial={{ scale: 0.5, rotate: 15, opacity: 0 }}
+                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                    exit={{ scale: 0.5, opacity: 0 }}
+                    className="p-3 rounded-full bg-destructive/10 text-destructive"
+                  >
+                    <Trash2 className="w-8 h-8" />
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+              <AlertDialogTitle className="text-xl font-black text-center">
+                {isRTL ? 'حذف التنبيه' : 'Delete Notification'}
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-center text-sm font-medium text-muted-foreground">
+                {isRTL 
+                  ? 'هل أنت متأكد من حذف هذا التنبيه؟' 
+                  : 'Are you sure you want to delete this notification?'}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-row gap-3 sm:justify-center">
+              <AlertDialogCancel className="flex-1 rounded-xl h-10 border-2 text-sm font-bold hover:bg-muted transition-all">
+                {isRTL ? 'تراجع' : 'Cancel'}
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  deleteNotification();
+                }}
+                disabled={isDeletingSingle}
+                className="flex-1 rounded-xl h-10 text-sm font-bold shadow-lg bg-destructive hover:bg-destructive/90 shadow-destructive/20 transition-all"
+              >
+                {isDeletingSingle ? <Loader2 className="w-4 h-4 animate-spin" /> : (isRTL ? 'حذف' : 'Delete')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete All Notifications Confirmation */}
+      <AlertDialog open={showDeleteAllConfirm} onOpenChange={setShowDeleteAllConfirm}>
+        <AlertDialogContent className="rounded-3xl border-none shadow-2xl p-0 overflow-hidden bg-background">
+          <div className="h-2 w-full bg-destructive" />
+          <div className="p-6 space-y-4">
+            <AlertDialogHeader>
+              <div className="flex justify-center mb-2">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key="delete-all-icon"
+                    initial={{ scale: 0.5, rotate: -15, opacity: 0 }}
+                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                    exit={{ scale: 0.5, opacity: 0 }}
+                    className="p-3 rounded-full bg-destructive/10 text-destructive"
+                  >
+                    <Trash2 className="w-10 h-10" />
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+              <AlertDialogTitle className="text-xl font-black text-center text-destructive">
+                {isRTL ? 'حذف جميع التنبيهات' : 'Delete All Notifications'}
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-center text-sm font-medium text-muted-foreground">
+                {isRTL 
+                  ? 'هل أنت متأكد من حذف كافة التنبيهات؟ لا يمكن التراجع عن هذا الإجراء.' 
+                  : 'Are you sure you want to delete all notifications? This action cannot be undone.'}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-row gap-3 sm:justify-center">
+              <AlertDialogCancel className="flex-1 rounded-xl h-10 border-2 text-sm font-bold hover:bg-muted transition-all">
+                {isRTL ? 'تراجع' : 'Cancel'}
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  deleteAllNotifications();
+                }}
+                disabled={isDeletingAll}
+                className="flex-1 rounded-xl h-10 text-sm font-bold shadow-lg bg-destructive hover:bg-destructive/90 shadow-destructive/20 transition-all"
+              >
+                {isDeletingAll ? <Loader2 className="w-4 h-4 animate-spin" /> : (isRTL ? 'حذف الكل' : 'Delete All')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </Popover>
+
   );
 };
 

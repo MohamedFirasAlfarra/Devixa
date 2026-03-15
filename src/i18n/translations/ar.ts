@@ -199,6 +199,7 @@ export const ar = {
     totalStudents: "إجمالي الطلاب",
     coursesCount: "الدورات",
     enrollments: "التسجيلات",
+    batches: "الدفعات",
     quickActions: "إجراءات سريعة",
     quickActionsDesc: "استخدم الشريط الجانبي لإدارة الدورات والدفعات والمستخدمين والمزيد.",
   },

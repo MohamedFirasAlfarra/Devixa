@@ -196,6 +196,7 @@ export const en = {
     totalStudents: "Total Students",
     coursesCount: "Courses",
     enrollments: "Enrollments",
+    batches: "Batches",
     quickActions: "Quick Actions",
     quickActionsDesc: "Use the sidebar to manage courses, batches, users, and more.",
   },
