@@ -255,12 +255,12 @@ export default function AdminOffers() {
     return (
         <DashboardLayout>
             <div className="space-y-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-display font-bold mb-2">{t.nav.offers}</h1>
-                        <p className="text-muted-foreground">{t.adminOffers.subtitle}</p>
+                        <h1 className="text-2xl sm:text-3xl font-display font-bold mb-1 sm:mb-2">{t.nav.offers}</h1>
+                        <p className="text-sm sm:text-base text-muted-foreground">{t.adminOffers.subtitle}</p>
                     </div>
-                    <Button onClick={() => handleOpenDialog()} className="gap-2 gradient-accent text-accent-foreground">
+                    <Button onClick={() => handleOpenDialog()} className="w-full sm:w-auto gap-2 gradient-accent text-accent-foreground">
                         <Plus className="w-4 h-4" />
                         {t.adminOffers.addOffer}
                     </Button>
@@ -283,75 +283,149 @@ export default function AdminOffers() {
                                 </Button>
                             </div>
                         ) : (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>{t.adminOffers.course}</TableHead>
-                                        <TableHead>{t.adminOffers.discount}</TableHead>
-                                        <TableHead>{t.adminOffers.originalPrice}</TableHead>
-                                        <TableHead>{t.adminOffers.offerPrice}</TableHead>
-                                        <TableHead>{t.adminOffers.usage}</TableHead>
-                                        <TableHead>{t.adminOffers.expiryDate}</TableHead>
-                                        <TableHead>{t.common.status}</TableHead>
-                                        <TableHead className="text-end">{t.common.actions}</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
+                            <>
+                                {/* Desktop Table View */}
+                                <div className="hidden md:block">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>{t.adminOffers.course}</TableHead>
+                                                <TableHead>{t.adminOffers.discount}</TableHead>
+                                                <TableHead>{t.adminOffers.originalPrice}</TableHead>
+                                                <TableHead>{t.adminOffers.offerPrice}</TableHead>
+                                                <TableHead className="hidden lg:table-cell">{t.adminOffers.usage}</TableHead>
+                                                <TableHead className="hidden lg:table-cell">{t.adminOffers.expiryDate}</TableHead>
+                                                <TableHead>{t.common.status}</TableHead>
+                                                <TableHead className="text-end">{t.common.actions}</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {offers.map((offer) => {
+                                                const originalPrice = offer.courses.price || 0;
+                                                const discountedPrice = originalPrice * (1 - offer.discount_percentage / 100);
+                                                return (
+                                                    <TableRow key={offer.id}>
+                                                        <TableCell className="font-medium">{offer.courses.title}</TableCell>
+                                                        <TableCell>
+                                                            <Badge variant="secondary" className="bg-accent/10 text-accent">
+                                                                {offer.discount_percentage}% {t.courses.off}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell className="text-muted-foreground line-through">${originalPrice.toFixed(2)}</TableCell>
+                                                        <TableCell className="font-bold text-primary">${discountedPrice.toFixed(2)}</TableCell>
+                                                        <TableCell className="hidden lg:table-cell">
+                                                            {offer.used_count || 0} / {offer.max_students || "\u221E"}
+                                                        </TableCell>
+                                                        <TableCell className="text-sm hidden lg:table-cell">
+                                                            {offer.expires_at
+                                                                ? new Date(offer.expires_at).toLocaleString()
+                                                                : t.adminOffers.unlimited}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <span
+                                                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${offer.is_active
+                                                                    ? "bg-success/10 text-success"
+                                                                    : "bg-muted text-muted-foreground"
+                                                                    }`}
+                                                            >
+                                                                {offer.is_active ? t.common.active : t.common.inactive}
+                                                            </span>
+                                                        </TableCell>
+                                                        <TableCell className="text-end">
+                                                            <div className="flex items-center justify-end gap-2">
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    onClick={() => handleOpenDialog(offer)}
+                                                                >
+                                                                    <Pencil className="w-4 h-4" />
+                                                                </Button>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    onClick={() => handleDeleteClick(offer)}
+                                                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                                >
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                </Button>
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                );
+                                            })}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+
+                                {/* Mobile Card View */}
+                                <div className="grid grid-cols-1 gap-4 p-4 md:hidden">
                                     {offers.map((offer) => {
                                         const originalPrice = offer.courses.price || 0;
                                         const discountedPrice = originalPrice * (1 - offer.discount_percentage / 100);
                                         return (
-                                            <TableRow key={offer.id}>
-                                                <TableCell className="font-medium">{offer.courses.title}</TableCell>
-                                                <TableCell>
-                                                    <Badge variant="secondary" className="bg-accent/10 text-accent">
-                                                        {offer.discount_percentage}% {t.courses.off}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell className="text-muted-foreground line-through">${originalPrice.toFixed(2)}</TableCell>
-                                                <TableCell className="font-bold text-primary">${discountedPrice.toFixed(2)}</TableCell>
-                                                <TableCell>
-                                                    {offer.used_count || 0} / {offer.max_students || "\u221E"}
-                                                </TableCell>
-                                                <TableCell className="text-sm">
-                                                    {offer.expires_at
-                                                        ? new Date(offer.expires_at).toLocaleString()
-                                                        : t.adminOffers.unlimited}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <span
-                                                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${offer.is_active
-                                                            ? "bg-success/10 text-success"
-                                                            : "bg-muted text-muted-foreground"
-                                                            }`}
-                                                    >
-                                                        {offer.is_active ? t.common.active : t.common.inactive}
-                                                    </span>
-                                                </TableCell>
-                                                <TableCell className="text-end">
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            onClick={() => handleOpenDialog(offer)}
-                                                        >
-                                                            <Pencil className="w-4 h-4" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            onClick={() => handleDeleteClick(offer)}
-                                                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                        >
-                                                            <Trash2 className="w-4 h-4" />
-                                                        </Button>
+                                            <Card key={offer.id} className="overflow-hidden border-none shadow-sm bg-accent/5">
+                                                <CardContent className="p-4 space-y-4">
+                                                    <div className="flex justify-between items-start">
+                                                        <h3 className="font-bold text-lg leading-tight">{offer.courses.title}</h3>
+                                                        <Badge variant="secondary" className="bg-accent/10 text-accent">
+                                                            {offer.discount_percentage}% {t.courses.off}
+                                                        </Badge>
                                                     </div>
-                                                </TableCell>
-                                            </TableRow>
+                                                    
+                                                    <div className="grid grid-cols-2 gap-4 text-sm">
+                                                        <div>
+                                                            <p className="text-muted-foreground">{t.adminOffers.offerPrice}</p>
+                                                            <p className="font-bold text-primary text-base">${discountedPrice.toFixed(2)}</p>
+                                                            <p className="text-xs text-muted-foreground line-through">${originalPrice.toFixed(2)}</p>
+                                                        </div>
+                                                        <div className="text-end">
+                                                            <p className="text-muted-foreground">{t.adminOffers.usage}</p>
+                                                            <p className="font-medium">
+                                                                {offer.used_count || 0} / {offer.max_students || "\u221E"}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex items-center justify-between pt-2 border-t border-accent/10">
+                                                        <span
+                                                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${offer.is_active
+                                                                ? "bg-success/10 text-success"
+                                                                : "bg-muted text-muted-foreground"
+                                                                }`}
+                                                        >
+                                                            {offer.is_active ? t.common.active : t.common.inactive}
+                                                        </span>
+                                                        <div className="flex gap-1">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() => handleOpenDialog(offer)}
+                                                                className="h-8 w-8"
+                                                            >
+                                                                <Pencil className="w-4 h-4" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() => handleDeleteClick(offer)}
+                                                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {offer.expires_at && (
+                                                        <p className="text-[10px] text-muted-foreground pt-1">
+                                                            {t.adminOffers.expiryDate}: {new Date(offer.expires_at).toLocaleString()}
+                                                        </p>
+                                                    )}
+                                                </CardContent>
+                                            </Card>
                                         );
                                     })}
-                                </TableBody>
-                            </Table>
+                                </div>
+                            </>
                         )}
                     </CardContent>
                 </Card>
